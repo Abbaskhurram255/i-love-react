@@ -745,7 +745,7 @@ def translate_for_react(code: str) -> str:
 		code = code.replace(f"__STRING_{j}__", string)
 	# should come after
 	code = replace(code, r"(?<=(?:\bfrom|(?<=\bim)port) )`(?<module>[A-Za-z\.][\w\.\\\/-]*)`(?!\w)", "\'$module\'")
-	if not re.search(r"(?<=(?:\bfrom|(?<=\bim)port) )[\"\'\`]react[\"\'\`](?!\w)", code) and not code.strip().startswtih("import * as React"):
+	if not re.search(r"(?<=(?:\bfrom|(?<=\bim)port) )[\"\'\`]react[\"\'\`](?!\w)", code) and not code.strip().startswith("import * as React"):
 		code = f"import * as React from 'react';\nObject.assign(window, React);\n\n{code}"
 	return code
 
