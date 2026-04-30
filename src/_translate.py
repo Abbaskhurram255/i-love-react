@@ -2,7 +2,74 @@ import KL_Py
 # ^ the import above is a MANDATORY import, and so is the following:
 from KL_Py import *
 
-__all__: list[str] = ["translate_for_react"]
+__all__: list[str] = ["translate_for_react", "translate_for_css"]
+
+def translate_for_css(code: str) -> str:
+	if not isinstance(code, str):
+		return ""
+	keys: dict[str, str] = {
+		# properties
+		"bg": "background",
+		"fg|clr": "color",
+		"mt": "margin-top",
+		"mr": "margin-right",
+		"mb": "margin-bottom",
+		"ml": "margin-left",
+		"m(?:ar)?gi?n?": "margin",
+		"pt": "padding-top",
+		"pr": "padding-right",
+		"pb": "padding-bottom",
+		"pl": "padding-left",
+		"pa?d": "padding",
+		"bsh(?:a?d(?:ow)?)?": "box-shadow",
+		"tsh(?:a?d(?:ow)?)?": "text-shadow",
+		"brad(?:ius)?": "border-radius",
+		"brtl": "border-radius-top-left",
+		"brtr": "border-radius-top-right",
+		"brbr": "border-radius-bottom-right",
+		"brbl": "border-radius-bottom-left",
+		"bdt": "border-top",
+		"bdr": "border-right",
+		"bdb": "border-bottom",
+		"bdl": "border-left",
+		"bd": "border",
+		"bsi?zi?n?g?": "box-sizing",
+		"bbox": "border-box",
+		"cbox": "content-box",
+		# gradients
+		"lg": "linear-gradient",
+		"rg": "radial-gradient",
+		"s(?:i|ee)dhe[_ \-]ha{1,2}th": "to right",
+		"ulte[_ \-]ha{1,2}th": "to left",
+		"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))i[_- ]tara?f": "to bottom",
+		"upar[_- ](?:k|wal)i[_ \-]tara?f": "to top",
+		# functions
+		"load": "var",
+		"ki[-_]jaga": "url",
+		# selectors
+		"sab": "*",
+	}
+	code = replace(code, r"#[^\n]*", "")
+	code = replace(code, r"[\"']{3}[\s\S]*?[\"']{3}", "")
+	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
+	# sequence matters
+	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')")
+	for i, string in enumerate(strings):
+		code = code.replace(string, f"__STRING_{i}__", 1)
+	for key, value in keys.items():
+		code = replace(code, fr"(?<!\.)\b({key})\b", value)
+	code = replace(code, "\t", " " * 4)
+	code = replace(code, r" *\: *$", " {")
+	code = replace(code, r"(?<!\S)\/$", "}")
+	code = replace(code, " *= *", ": ")
+	code = replace(code, r" *\b_ *$", ";")
+	code = replace(code, r"\$ *(?<varname>[A-Za-z_]\w*)", "--$varname")
+	while re.search(r"\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
+		code = replace(code, r"\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
+	for j, string in old_enumerate(strings):
+		code = code.replace(f"__STRING_{j}__", string)
+	return code
+
 def translate_for_react(code: str) -> str:
 	if not isinstance(code, str):
 		return ""
@@ -658,7 +725,7 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<=(?<![^ \t])[ \t])(?:is|he|kism) (?<type>(?:[A-Za-z]\w*\.?)+)\b(?=(?: (?:as|tor) [A-Za-z_]\w*)?\:)", "case $type()")
 	# KEY-VALUE replacement
 	for key, value in keys.items():
-		code = replace(code, r"(?<!\.)\b(" + key + r"(?! ?\: ?\w+))\b", value)
+		code = replace(code, rf"(?<!\.)\b({key})\b", value)
 	code = replace(code, r"(?<type>[A-Za-z]*\w*\.?[A-Za-z]\w*)(?:\[\]|<list>)", "list[$type]")
 	# int[] -> list[int]
 	# int<list> -> list[int]

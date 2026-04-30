@@ -1,6 +1,6 @@
 import os, sys, re
 from typing import Callable, Any
-from _translate import translate_for_react
+from _translate import translate_for_react, translate_for_css
 
 import subprocess
 try:
@@ -55,11 +55,15 @@ def replace(src: str, to_replace: str|dict|None = None, replacement: str|Callabl
 if __name__ == "__main__":
 	for root, dirs, files in os.walk("."):
 		for filename in files:
-			if not re.search(r"\.jsx?$", filename):
+			if not re.search(r"\.jsx?$", filename) and not re.search(r"\.css$", filename):
 				continue
 			print(filename)
 			with open(filename) as f:
 				content: str = f.read()
-			updated_content = translate_for_react(content)
+			if re.search(r"\.jsx$", filename):
+				updated_content = translate_for_react(content)
+			else:
+				print("processing the css...")
+				updated_content = translate_for_css(content)
 			with open(filename, mode="w") as f:
 				f.write(updated_content)

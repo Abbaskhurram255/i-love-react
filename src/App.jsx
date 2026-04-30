@@ -4,26 +4,36 @@ import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';
 import './App.css';
 
+fn App2():
+	...
+:/
+fn func2():
+	...
+:/
+fn func3():
+	...
+:/
+
 function App() {
     const [count, setCount] = useState(0);
 
     return (
         <>
-            <section id=`center`>
-                <div className=`hero`>
+            <section id='center'>
+                <div className='hero'>
                     <img
                         src={heroImg}
-                        className=`base`
-                        width=`170`
-                        height=`179`
-                        alt=``
+                        className='base'
+                        width='170'
+                        height='179'
+                        alt=''
                     />
                     <img
                         src={reactLogo}
-                        className=`framework`
-                        alt=`React logo`
+                        className='framework'
+                        alt='React logo'
                     />
-                    <img src={viteLogo} className=`vite` alt=`Vite logo` />
+                    <img src={viteLogo} className='vite' alt='Vite logo' />
                 </div>
                 <div>
                     <h1>Get started</h1>
@@ -33,106 +43,106 @@ function App() {
                     </p>
                 </div>
                 <button
-                    className=`counter`
+                    className='counter'
                     onClick={() => setCount((count) => count + 1)}
                 >
                     Count = {count}
                 </button>
             </section>
 
-            <div className=`ticks`></div>
+            <div className='ticks'></div>
 
-            <section id=`next-steps`>
-                <div id=`docs`>
+            <section id='next-steps'>
+                <div id='docs'>
                     <svg
-                        className=`icon`
-                        role=`presentation`
-                        data-hidden=`true`
+                        className='icon'
+                        role='presentation'
+                        data-hidden='true'
                     >
-                        <use href=`/icons.svg
+                        <use href='/icons.svg
                     </svg>
                     <h2>Documentation</h2>
                     <p>Your questions, answered</p>
                     <ul>
                         <li>
-                            <a href=`https://vite.dev/` target=`_blank`>
-                                <img className=`logo` src={viteLogo} ifMissing=`logo image` />
+                            <a href='https://vite.dev/' target='_blank'>
+                                <img className='logo' src={viteLogo} alt='logo image' />
                                 Explore Vite
                             </a>
                         </li>
                         <li>
-                            <a href=`https://react.dev/` target=`_blank`>
+                            <a href='https://react.dev/' target='_blank'>
                                 <img
-                                    className=`button-icon`
+                                    className='button-icon'
                                     src={reactLogo}
-                                    alt=``
+                                    alt=''
                                 />
                                 Learn more
                             </a>
                         </li>
                     </ul>
                 </div>
-                <div id=`social`>
+                <div id='social'>
                     <svg
-                        className=`icon`
-                        role=`presentation`
-                        data-hidden=`true`
+                        className='icon'
+                        role='presentation'
+                        data-hidden='true'
                     >
-                        <use href=`/icons.svg
+                        <use href='/icons.svg
                     </svg>
                     <h2>Connect with us</h2>
                     <p>Join the Vite community</p>
                     <ul>
                         <li>
                             <a
-                                href=`https://github.com/vitejs/vite`
-                                target=`_blank`
+                                href='https://github.com/vitejs/vite'
+                                target='_blank'
                             >
                                 <svg
-                                    className=`button-icon`
-                                    role=`presentation`
-                                    data-hidden=`true`
+                                    className='button-icon'
+                                    role='presentation'
+                                    data-hidden='true'
                                 >
-                                    <use href=`/icons.svg
+                                    <use href='/icons.svg
                                 </svg>
                                 GitHub
                             </a>
                         </li>
                         <li>
-                            <a href=`https://chat.vite.dev/` target=`_blank`>
+                            <a href='https://chat.vite.dev/' target='_blank'>
                                 <svg
-                                    className=`button-icon`
-                                    role=`presentation`
-                                    data-hidden=`true`
+                                    className='button-icon'
+                                    role='presentation'
+                                    data-hidden='true'
                                 >
-                                    <use href=`/icons.svg
+                                    <use href='/icons.svg
                                 </svg>
                                 Discord
                             </a>
                         </li>
                         <li>
-                            <a href=`https://x.com/viteJs` target=`_blank`>
+                            <a href='https://x.com/viteJs' target='_blank'>
                                 <svg
-                                    className=`button-icon`
-                                    role=`presentation`
-                                    data-hidden=`true`
+                                    className='button-icon'
+                                    role='presentation'
+                                    data-hidden='true'
                                 >
-                                    <use href=`/icons.svg
+                                    <use href='/icons.svg
                                 </svg>
                                 X.com
                             </a>
                         </li>
                         <li>
                             <a
-                                href=`https://bsky.app/profile/vite.dev`
-                                target=`_blank`
+                                href='https://bsky.app/profile/vite.dev'
+                                target='_blank'
                             >
                                 <svg
-                                    className=`button-icon`
-                                    role=`presentation`
-                                    data-hidden=`true`
+                                    className='button-icon'
+                                    role='presentation'
+                                    data-hidden='true'
                                 >
-                                    <use href=`/icons.svg
+                                    <use href='/icons.svg
                                 </svg>
                                 Bluesky
                             </a>
@@ -141,8 +151,8 @@ function App() {
                 </div>
             </section>
 
-            <div className=`ticks`></div>
-            <section id=`spacer`></section>
+            <div className='ticks'></div>
+            <section id='spacer'></section>
         </>
     );
 }
