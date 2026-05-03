@@ -4,15 +4,15 @@ import viteLogo from './assets/vite.svg';
 import heroImg from './assets/hero.png';
 import './App.css';
 
-fn App2():
+function App2() {
     throw new Error('Function not implemented.')
-/
-fn func2():
+}
+function func2() {
     throw new Error('Function not implemented.')
-/
-fn func3():
+}
+function func3() {
     throw new Error('Function not implemented.')
-/
+}
 
 function App() {
     const [count, setCount] = useState(0);
