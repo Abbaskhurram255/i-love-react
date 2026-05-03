@@ -87,20 +87,19 @@ def translate_for_react(code: str) -> str:
 		r"hamesha|musalsal": "const",
 		r"koshish(?: karo)?": "try",
 		r"naka{1,2}mi": "} catch",
-		"__print__": "toString",
+		"__(?:str|print)__": "toString",
 		"__(f(?:mt)?|k)__": "__format__",
 		"c(?:ons)?tr": "constructor",
 		"it": "this",
 		"its": "this",
 		"me": "this",
 		"mera": "this",
+		"apna": "this",
 		"meri": "this",
 		"mujhe": "this",
 		# diff: capital first, not-capital first
 		r"khud(?:[_ ]?k[aeio])?": "this",
 		"my": "this",
-		"super": "super",
-		"parent": "super",
 		"mom": "super",
 		r"ret|out|lota{1,2}o": "return",
 		# math
@@ -650,7 +649,7 @@ def translate_for_react(code: str) -> str:
 	# to avoid conflict
 	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:not|nahi) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)?[ _]?(?:type|kism)(?:of)?) (?<B>[\"'][A-Za-z_][\w\.\|]*[\"'])", "typeof($A) != $B")
 	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)?[ _]?(?:type|kism)(?:of)?) (?<B>[\"'][A-Za-z_][\w\.\|]*[\"'])", "typeof($A) == $B")
-	code = replace(code, r"\b(?:print|kaho) (?<args>[^\(\)\{\}\t\n]+)?", "console.log($args)")
+	code = replace(code, r"\b(?:print|kaho) (?<args>[^\(\)\{\}\t\n]+)?", "console.log('' + $args)")
 	code = replace(code, r",? <?(?:(?:might|shayad) (?:throw|raise|de|uthae)|(?:throw|raise)s|uthae) [^\:\n\t]+>?(?=\:)", "")
 	# ^ supposedly after a function f[cn] x({...}?) might throw SomeError, and before a colon
 	code = replace(code, r"\bfarz\b", "let")
@@ -857,6 +856,31 @@ mangao App.css, globals.css, React
 mangao React
 mangao ./App
 mangao App ./App mese
+
+class Book:
+    constr(name, author, release):
+        apna.name = name
+        apna.author = author
+        apna.release = release
+    /
+    __print__():
+        lotao `Book(name=$apna.name , author=$apna.author , release= $apna.release )`
+    /
+/
+        
+        
+fc App:
+    ...
+/
+
+farz book1 = nai Book("The Subtle Art", "Mark Manson", 2016)
+kaho book1
+
+koshish:
+    kaho 0/0
+nakami:
+    kaho("Javascript does not allow division by zero")
+/
 """))
 
 if __name__ == "__main__":
