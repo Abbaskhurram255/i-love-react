@@ -41,11 +41,11 @@ def translate_for_css(code: str) -> str:
 		"rg": "radial-gradient",
 		"s(?:i|ee)dhe[_ \-]ha{1,2}th": "to right",
 		"ulte[_ \-]ha{1,2}th": "to left",
-		"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))i[_- ]tara?f": "to bottom",
-		"upar[_- ](?:k|wal)i[_ \-]tara?f": "to top",
+		"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))i[_\- ]tara?f": "to bottom",
+		"upar[_\- ](?:k|wal)i[_ \-]tara?f": "to top",
 		# functions
 		"load": "var",
-		"ki[-_]jaga": "url",
+		"ki[-\_]jaga": "url",
 		# selectors
 		"sab": "*",
 	}
@@ -60,7 +60,7 @@ def translate_for_css(code: str) -> str:
 		code = replace(code, fr"(?<!\.)\b({key})\b", value)
 	code = replace(code, "\t", " " * 4)
 	code = replace(code, r" *\: *$", " {")
-	code = replace(code, r"(?<!\S)\/$", "}")
+	code = replace(code, r"(?<!\S)\:?\/$", "}")
 	code = replace(code, " *= *", ": ")
 	code = replace(code, r" *\b_ *$", ";")
 	code = replace(code, r"\$ *(?<varname>[A-Za-z_]\w*)", "--$varname")
@@ -81,27 +81,21 @@ def translate_for_react(code: str) -> str:
 		r"cls(?= *\=)": "className",
 		r"cl(?:ic)?k(?= *\=)": "onClick",
 		r"loc(?= *\=)": "src",
-		r"altText": "alt",
+		r"alt[_\-]?[Tt]ext": "alt",
 		"f[cn]": "function",
-		"n(?:a(?:ya|i))": "new",
-		"hamesha": "const",
-		"__(?:c(?:ons)?tr|bake|shurwat|build|banao)__": "__init__",
-		"__devview__": "__repr__",
-		"__print__": "__str__",
+		r"n(?:a(?:ya|i))": "new",
+		r"hamesha|musalsal": "const",
+		r"koshish(?: karo)?": "try",
+		r"naka{1,2}mi": "} catch",
+		"__print__": "toString",
 		"__(f(?:mt)?|k)__": "__format__",
-		"Ctr": "Self",
-		"Constr": "Self",
-		"This": "Self",
-		"It": "Self",
+		"c(?:ons)?tr": "constructor",
 		"it": "this",
 		"its": "this",
-		"Me": "Self",
 		"me": "this",
 		"mera": "this",
 		"meri": "this",
-		"Mujhe": "Self",
 		"mujhe": "this",
-		r"Khud(?:[_ ]?k[aeio])?": "Self",
 		# diff: capital first, not-capital first
 		r"khud(?:[_ ]?k[aeio])?": "this",
 		"my": "this",
@@ -153,7 +147,7 @@ def translate_for_react(code: str) -> str:
 		# sequence
 		r"a(?:ur|nd)(?= +\S)": "&&",
 		r"(?:ya|or)(?= +\S)": "||",
-		r"(?:nahi|na[_ ]mojud|kha{1,2}li|(?:is|ai)n'?t)(?= \S)": "not",
+		r"(?:nahi|na[_ ]mojud|kha{1,2}li|(?:is|ai)n'?t)(?= \S)": "!",
 		r"kuch(?= ?\()": "any",
 		r"sa{1,2}re(?= ?\()": "all",
 		"ja?bta?k": "while",
@@ -169,8 +163,8 @@ def translate_for_react(code: str) -> str:
 		# ignore only translates to continue as long as it's indented
 		# and ISN'T followed by a (
 		# no messing around^
-		r"(?<n>\d+) +dafa(?= *\:)": "for i in range($n)",
-		r"baad(?= ?\()": "delay",
+		r"(?<n>\d+) +dafa(?= *\:)": "for (let i=0; i<$n; i++)",
+		r"baad(?= ?\()": "setTimeout",
 		r"(with_i(?:ndex)?|numbered)(?= ?\()": "numbered",
 		r"kism(?= *\()": "typeof",
 		r"Shayad(?= ?\[[A-Za-z_])": "Union",
@@ -229,7 +223,7 @@ def translate_for_react(code: str) -> str:
 		processed_multi_line_comment = re.sub("[^\n]*\n[^\n]*", "\n", processed_multi_line_comment)
 		code = code.replace(unprocessed_multi_line_comment, processed_multi_line_comment)
 	# Remove strings (actual strings, now that multi-line comments are GONE)
-	strings: list[str] = find_matches(code, r"(?<![\"\\])[kflerb]*(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])[kflerb]*(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')")
+	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"(?<![\`\\])(?:\`{1}|\`{3})[^\`]*(?:\`{1}|\`{3})(?!\`)")
 	# added partial support for apostrophe strings (strings initiated with an apostrophe, rather than quotes)
 	for i, string in old_enumerate(strings):
 		# for it to work,
@@ -239,27 +233,20 @@ def translate_for_react(code: str) -> str:
 		# every single iteration
 		# and keep catching literal strings
 		was_multi_line_string_initially: bool = False
-		was_l_string_initially: bool = False
-		was_b_string_initially: bool = False
+		was_t_string_initially: bool = False
 		if re.search(r"^[\"\']{3}(?=[\s\S]+)", strings[i]):
 			strings[i] = strings[i][2:-2].replace("\n", "\\n")
 			was_multi_line_string_initially = True
-		if re.search("(?:(?<=^[A-Za-z])[kf]+|^[kf]+)(?=[A-Za-z]*[\"\'])", strings[i]):
-			strings[i] = replace(strings[i], "(?:(?<=^[A-Za-z])[kf]+|^[kf]+)(?=[A-Za-z]*[\"\'])", "")
-		if re.search("(?:(?<=^[A-Za-z])[ler]+|^[ler]+)(?=[A-Za-z]*[\"\'])", strings[i]):
-			strings[i] = replace(strings[i], "(?:(?<=^[A-Za-z])[ler]+|^[ler]+)(?=[A-Za-z]*[\"\'])", "")
-			was_l_string_initially = True
-		if re.search("(?:(?<=^[A-Za-z])b|^b)(?=[A-Za-z]*[\"\'])", strings[i]):
-			strings[i] = replace(strings[i], "(?:(?<=^[A-Za-z])b|^b)(?=[A-Za-z]*[\"\'])", "")
-			was_b_string_initially = True
+		if strings[i].startswith("`"):
+			was_t_string_initially = True
 		strings[i] = strings[i][1:-1]
 		if len(strings[i]) == 1:
 			# safety: let single characters pass through
 			# to allow working with
 			# single characters, and character ranges
 			continue
-		if not was_l_string_initially:
-			strings[i] = replace(strings[i], r"\$(\{\})", r"$1")
+		#if not was_t_string_initially:
+		#	strings[i] = replace(strings[i], r"\$(\{\})", r"$1")
 		# handle blank templates without throwing an error
 		# WARNING: this changes core Python f-string functionality for {}
 		# actually, for the sake of commas, and spaces (as the $-based syntax can mess them up), let's allow both
@@ -287,11 +274,15 @@ def translate_for_react(code: str) -> str:
 		# find the template strings, and if found, for each, post-process
 		if re.search(r"\$\{?[^\}]+\}?", strings[i]):
 				print("here")
-				templates_found_in_string: list[str] = find_matches(strings[i], r"(?<!\\)\$\{?[^\}]+\}?")
+				templates_found_in_string: list[str] = find_matches(strings[i], r"(?<!\\)\$\{?[^\},]+\}?")
+				print(f"{templates_found_in_string=}")
 				for templt in templates_found_in_string:
 					# {sum (is|he)} should translate to
 					# sum (is|he): {sum}
-					print(f"{templt=}")
+					print(f"here {templt=}")
+					if re.search(r"[^\w:=]$", templt.strip("${}")):
+						templt = "${" + re.sub(r"[^\w:=]+$", "", templt.strip("${}")) + "}"
+					print(f"now {templt=}")
 					processed_templt: str = replace(replace(templt, r"\$\{(?<placeholder_slash_varname>[^\{\} ]+)(?<! )(?: +(?<separator>is|hen?)|[\:\=]) *:? *\}", "$placeholder_slash_varname $separator: ${$placeholder_slash_varname}####"), "(?<!#)####(?!#)", "").replace("=:", ":").replace("::", ":").replace(" : ", ": ")
 					# Warning: the 4-hashes part might seem ridiculous, BUT IS A BUG FIX, and better stay untouched
 					for key, value in keys.items():
@@ -346,7 +337,7 @@ def translate_for_react(code: str) -> str:
 		# ^ needed as-is
 		old_string = string
 		# ^^this is a mandatory step
-		if was_l_string_initially:
+		if not was_t_string_initially and not "$" in old_string:
 			# recognize literal strings
 			# and return a non-processed
 			# version of the string
@@ -354,18 +345,15 @@ def translate_for_react(code: str) -> str:
 			strings[i] = old_string
 			# ^^mandatory step
 			strings[i] = replace(strings[i], "(?:(?<=^[A-Za-z])[ler]+|^[ler]+)(?=[A-Za-z]*[\"\'])", "")
-			strings[i] = replace(strings[i], "(?:(?<=^[A-Za-z])[kf]+|^[kf]+)(?=[A-Za-z]*[\"\'])", "f")
 			# now that the string is back to being its original version
 			# ^ this replacement has to
 			# take place again
-		if was_b_string_initially:
-			strings[i] = old_string
 		# auto-escape bad escapes (EXCEPT SPECIAL CHARACTERS LIKE newline \n, tabbreak \t, return carriage \r, backspace \b, vertical space \v, ASCII bell \a, form feed \f, escaped backslash \\, escaped quote \", escaped apostrophe \', among others.)
 		# kill the need for r-strings
 		# completely
 		strings[i] = replace(strings[i], "(?:(?<=^[A-Za-z])[ler]+|^[ler]+)(?=[A-Za-z]*[\"\'])", "")
 		strings[i] = replace(strings[i], r"(\\[^abfnrtv\\\'\"\nxuUN])", r"\\$1")
-		code = code.replace(old_string, f"__STRING_{i}__") # editor, here's a NOTE: if it works, DON'T touch it! should be `code.replace(old_string, ...`, i.e. just AS-IS, and NOT replace(strings[i], ...
+		code = code.replace(old_string, f"__STRING_{i}__", 1) # editor, here's a NOTE: if it works, DON'T touch it! should be `code.replace(old_string, ...`, i.e. just AS-IS, and NOT replace(strings[i], ...
 		# ^ needed as-is
 	#print(f"{code=}")
 	# Replace context-based keywords
@@ -384,11 +372,11 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, "\t", FOUR_WHITES)
 	code = replace(code, r"(?<= {4})(\.+|ba{1,2}d_?me|later|pass)(?![^\n])", "throw new Error('Function not implemented.')")
 	code = replace(code, r"\:(?= *\n)", " {")
-	code = replace(code, r"koshish(?: karo)?", "try")
-	code = replace(code, r"naka{1,2}mi", "} catch")
-	code = replace(code, r"(?<=[\n\s]):\/(?![^\n])", "}")
-	code = replace(code, r"<\.(?! *\d)", "<div")
-	code = replace(code, r"\.(?= *>(?! *\d))", "div")
+	code = replace(code, r"(?<!\S)\:?\/$", "}")
+	code = replace(code, r"<\.(?! *\d)", "<div") #start of div
+	code = replace(code, r"\.(?= *>(?! *\d))", "div") #end of div, functional
+	code = replace(code, r"< *btn\b", "<button") #start of button
+	code = replace(code, r"btn(?= *>(?! *\d))", "button") #end of button, functional
 	while re.search(r"([A-Za-z]+)_([A-Za-z])(\w*)", code):
 		code = re.sub(r"([A-Za-z]+)_([A-Za-z])(\w*)", lambda m: f"{m.group(1)}{m.group(2).upper()}{m.group(3).lower()}", code)
 	# ^ was too needy for this
@@ -398,7 +386,8 @@ def translate_for_react(code: str) -> str:
 	# so long as it's preceded by either a tab, or 4 spaces, AND ALSO followed by a
 	# NON line-break character, to allow ranges to pass through, the following are the exceptions:
 	# ....5, .1....5, 1..5, ..5, 2..10, 2..10 baad 2-2, 5..50::5
-	__pretty_function_imports_regex__: str = r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])(?:tor|surat) (?<aliases>[A-Za-z_][\w, ]*) mangao (?<functions>[A-Za-z_][\w, ]*)\b (?<module>[A-Za-z\.][\w\.\\\/-]*) (?:k[aei]|(?:me[_ ]?)?se)\b"
+
+	__pretty_function_imports_regex__: str = r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])(?:tor|surat) (?<aliases>[A-Za-z_][\w, ]*) mangao (?<functions>[A-Za-z_\*][\w, \*]*)\b [\"'`]?(?<module>[A-Za-z\.][\w\.\\\/-]*)[\"'`]? (?:k[aei]|(?:me[_ ]?)?se)\b"
 	def __pretty_function_imports_replacer__(match: re.Match) -> str:
 		pre_whitespace_for_indented_imports: str = match.group("intentionally_allow_some_space")
 		module: str|list[str] = match.group("module").rstrip(r".\\\/-")
@@ -413,17 +402,17 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, __pretty_function_imports_regex__, __pretty_function_imports_replacer__)
 	# ^ example of usage:
 	# | tor DF mangao DataFrame pandas mese
-	code = replace(code, r"^(?<intentionally_allow_some_space> *)(?<![^  \n  ])(?<module>[A-Za-z\.][\w\.]*)\b (?:me)?[_ ]?se mangao (?<functions>\*|sab[_ ]kuch|[A-Za-z_][\w, ]*\b)", "${intentionally_allow_some_space}from $module import $functions")
+	code = replace(code, r"^(?<intentionally_allow_some_space> *)(?<![^  \n  ])(?<module>[A-Za-z\.][\w\.\-\/]*)\b (?:me)?[_ ]?se mangao (?<functions>sab[_ ]kuch|[A-Za-z_\{\*][\w, \{\}\*]*)", "${intentionally_allow_some_space}import $functions from '$module'")
 	# this one KNOWINGLY doesn't use work boundary at the start
 	# to allow `.sublib mese mangao functions` to pass through
 	# pretty useful if you are working with a __init__ file
 	# ^ example of usage:
 	# | pandas mese mangao DataFrame, read_csv
-	code = replace(code, r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])mangao (?<functions>\*|sab[_ ]kuch|[A-Za-z_][\w, ]*\b) (?<module>[A-Za-z\.][\w\.]*)\b (?:me)?[_ ]?se\b", "${intentionally_allow_some_space}from $module import $functions")
+	code = replace(code, r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])mangao (?<functions>sab[_ ]kuch|[A-Za-z_\{\*][\w, \{\}\*]*) (?<module>[A-Za-z\.][\w\.\-\/]*)\b (?:me)?[_ ]?se\b", "${intentionally_allow_some_space}import $functions from '$module'")
 	# ^ example of usage:
 	# | mangao DataFrame, read_csv pandas mese
 	# look similar, but are different
-	__pretty_function_imports_regex_2__: str = r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])(?:tor|surat) (?<aliases>[A-Za-z_][\w, ]*) mangao (?<module>[A-Za-z\.][\w\.]*)\b(?: (?:k[aei]|(?:me[_ ]?)?se))? ?(?:[\[\:]|->)? ?(?<functions>(?<!\.)[A-Za-z_][\w, ]*)\b\]?"
+	__pretty_function_imports_regex_2__: str = r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])(?:tor|surat) (?<aliases>[A-Za-z_][\w, ]*) mangao (?<module>[A-Za-z\.][\w\.\\\/-]*)\b(?: (?:k[aei]|(?:me[_ ]?)?se))? ?(?:[\[\:]|->)? ?(?<functions>(?<!\.)[A-Za-z_\*\{][\w, \*\{\}]*)(?!\w)\]?"
 	def __pretty_function_imports_replacer_2__(match: re.Match) -> str:
 		pre_whitespace_for_indented_imports: str = match.group("intentionally_allow_some_space")
 		module: str|list[str] = match.group("module").rstrip(".")
@@ -433,12 +422,12 @@ def translate_for_react(code: str) -> str:
 		aliases = [a.strip() for a in re.split(r", ?(?:(?:aur|(?:ke[_ ])?sath) )?", aliases)]
 		length: int = min(len(functions), len(aliases))
 		functions_with_aliases: list[str] = [f"{functions[i]} as {aliases[i]}" for i in range(length)]
-		result: str = pre_whitespace_for_indented_imports + (f"from {module} import {', '.join(functions_with_aliases)}")
+		result: str = pre_whitespace_for_indented_imports + (f"import {', '.join(functions_with_aliases)} from '{module}'")
 		return result
 	code = replace(code, __pretty_function_imports_regex_2__, __pretty_function_imports_replacer_2__)
 	# ^ example of usage:
 	# | tor DF, rcsv mangao pandas[DataFrame, read_csv]
-	code = replace(code, r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])mangao (?<module>[A-Za-z\.]\w*)\b(?: *\. *| (?:k[aei]|(?:me[_ ]?)?se))? ?(?:[\[\:]|->)? ?(?<functions>\*|sab[_ ]kuch|[A-Za-z_][\w, ]*\b)\]?", "${intentionally_allow_some_space}from $module import $functions")
+	code = replace(code, r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])mangao (?<module>[A-Za-z\.][\w\.\\\/-]*)\b(?: (?:k[aei]|(?:me[_ ]?)?se)) ?(?:[\[\:]|->)? ?(?<functions>sab[_ ]kuch|[A-Za-z_\*\{][\w, \*\{\}]*(?!\w))\]?", "${intentionally_allow_some_space}import $functions from '$module'")
 	# ^ example of usage:
 	# | mangao pandas[DataFrame]
 	__pretty_module_imports_regex__: str = r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])(?:tor|surat) (?<aliases>[A-Za-z_][\w, ]*) mangao (?<modules>[A-Za-z_\.][\w\., ]*)\b"
@@ -455,13 +444,24 @@ def translate_for_react(code: str) -> str:
 	# ^ example of usage:
 	# | tor pd, np mangao pandas, numpy
 	# comes after\/
-	code = replace(code, r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])mangao (?<modules>[A-Za-z\_\.][\w\., ]*)\b", "${intentionally_allow_some_space}import $modules")
+	__default_imports_regex__: str = r"^(?<intentionally_allow_some_space> *)\b(?<![^  \n  ])mangao (?<modules>[A-Za-z\_\.\"\'\/][\w\., \"\'\/]*)(?!\w)"
+	def __default_imports_replacer__(match: re.Match) -> None:
+		module_string: str = match.group("modules")
+		modules: list[str] = [m.strip(" \'\"") for m in re.split(r", *(?:(?:aur|(?:ke[_ ])?sath) )?", module_string)]
+		result: str = ""
+		for m in modules:
+			if "." not in m:
+				result += f"import {m} from '{m.lower()}'; "
+				continue
+			result += f"import '{m}'; "
+		return result
+	code = replace(code, __default_imports_regex__, __default_imports_replacer__)
 	# ^ example of usage:
 	#| mangao pandas
 	# sequence matters!
 	# post processing module syntax
 	# which NOW HAS KEYWORD IMPORT instead of mangao
-	code = replace(code, r"\b(?<=import )sab[_ ]kuch\b", "*")
+	code = replace(code, r"\b(?<=import )sabKuch\b", "*")
 	code = replace(code, r"(?<=,) \b(?:a(?:nd|ur)|ya|(?:ke[_ ]?)?sath)\b", "")
 	# sequence matters!
 	code = replace(code, r"(?<![\t\t])\b(?:f[cn]|act|def) (?:main|start)(?:\([^\)\n\t]*\))?(?=(?: *-> *[\w\?]+)?\:)", "function main()")
@@ -600,46 +600,14 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+)( ka)? (?:thrice|teen gun[aei])\b", "(3*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+) (?:cha{1,2}r|4) gu?n[aei]\b", "(4*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+) (?:a{1,2}th|8) gu?n[aei]\b", "(8*$n)")
-	# ([..params(, *)?]*) -> lambda [..params(, *)?]:
-	# e.g.
-	# `(x) ->` becomes lambda x:
-	# `(x, y) ->` becomes `lambda x, y:`
-	# however, only handles parenthesized lambda parameters
-	# not supported for:
-	# `x ->`
-	code = replace(code, r"(?<!\w)\(?(?<params>(?:[A-Za-z_\.][\w\.]*(?:, *)?)*)\)? ?\->(?= ?\S)", "($params) =>")
-	#code = replace(code, r"->", "=>")
+	#code = replace(code, r"(?<!\w)\(?(?<params>(?:[A-Za-z_\.][\w\.]*(?:, *)?)*)\)? ?\->(?= ?\S)", "($params) =>")
+	code = replace(code, r"->", "=>")
 	# the actual support for `x ->` 
 	#code = replace(code, r"\b(?:f[cn]|act) (?<param>[A-Za-z_]\w*)(?=\: ?[^\n]{2,})", "$param")
 	# helps drop the parentheses if the function doesn't allow parameters
 	# f[cn] log: -> f[cn] log():
 	code = replace(code, r"\b(?:f[cn]|act) (?<funcname_followed_not_by_parens>[A-Za-z_]\w*)(?=(?<could_have_a_return_type>[^\(\)\{]+)?\{)", "function $funcname_followed_not_by_parens()")
 	code = replace(code, r"\b(?:f[cn]|act) (?<funcname_regular>[A-Za-z_]\w*)\((?<params>[^\)]+)?\)(?=(?<could_have_a_return_type>[^\:]+)?\:)", "function $funcname_regular($params)")
-	code = replace(code, r"@(redo|[Oo]ver(?:writ{1,2}e|rid{1,2}e)[sn]?|[Ee]xtends?|([Rr]e|[Nn]ot)_?[Ii]mplement(ed)?|dubara|nae_sire) ", "")
-	# sequence matters
-	# _str, _eq -> __str__, __eq__
-	# comes first
-	# this one handles calling of dunder methods
-	# in a conciser way:
-	# e.g. (?<= )._str() -> self.__str__()
-	# \/
-	code = replace(code, r"(?<= )\._([A-Za-z]+)\b(?=\()", "self.__$1__")
-	# these two are distinct
-	# this one handles calling of non-dunder methods
-	# in a conciser way:
-	# e.g. (?<= ).method() -> self.method()
-	# \/
-	code = replace(code, r"(?<= )\.([A-Za-z]\w*)\b(?=\()", "function.$1")
-	# sequence
-	code = replace(code, r"(?<=\w\.)_([A-Za-z]\w*)\b(?=\()", r"__$1__")
-	# sequence
-	code = replace(code, r"(?<=(?<!\w) {4})\b_([A-Za-z]+)\b\((?=[^\)]*\)[^\:]*\:)", r"function __$1__(self, ")
-	# reminder: look behinds in Python are supposed to have fixed width!
-	code = replace(code, r"\b(static|direct) (me?th?o?d|act|f[cn]|def)\b", "function")
-	code = replace(code, r"\bme?th?o?d (\w+\()(?=\))", "function $1self")
-	code = replace(code, r"\bme?th?o?d (\w+\()(?!\)|self)", "function $1self, ")
-	# sequence
-	code = replace(code, r"\b(?:interface|rule|instruct(?:ion)?|(?:base|abstract) cl(?:as)?s) (?<abstractclassname>\w+)", "class $abstractclassname(metaclass=AbstractBaseClassMeta)")
 	# "metaclass" is a keyword argument for the base class
 	# to avoid conflict
 	# comes before ^
@@ -725,7 +693,7 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<=(?<![^ \t])[ \t])(?:is|he|kism) (?<type>(?:[A-Za-z]\w*\.?)+)\b(?=(?: (?:as|tor) [A-Za-z_]\w*)?\:)", "case $type()")
 	# KEY-VALUE replacement
 	for key, value in keys.items():
-		code = replace(code, rf"(?<!\.)\b({key})\b", value)
+		code = replace(code, r"(?<!\.)\b(" + key + r"(?! ?\: ?\w+))\b", value)
 	code = replace(code, r"(?<type>[A-Za-z]*\w*\.?[A-Za-z]\w*)(?:\[\]|<list>)", "list[$type]")
 	# int[] -> list[int]
 	# int<list> -> list[int]
@@ -809,7 +777,7 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, __python_a_b_eq_x_y_regex__, __python_a_b_eq_x_y_replacer_fn__)
 	code = replace(code, r"\blet let\b", "let")
 	for j, string in old_enumerate(strings):
-		code = code.replace(f"__STRING_{j}__", string)
+		code = code.replace(f"__STRING_{j}__", string, 1)
 	# should come after
 	code = replace(code, r"(?<=(?:\bfrom|(?<=\bim)port) )`(?<module>[A-Za-z\.][\w\.\\\/-]*)`(?!\w)", "\'$module\'")
 	if not re.search(r"(?<=(?:\bfrom|(?<=\bim)port) )[\"\'\`]react[\"\'\`](?!\w)", code) and not code.strip().startswith("import * as React"):
@@ -842,6 +810,13 @@ fn App:
 fn x(p1, p2):
 	...
 :/
+fc add(x, y):
+	ret x + y;
+:/
+
+fc new_func(..items):
+	...
+:/
 farz [score, aur set_score] = use_state(0)
 hamesha const_func = x, y -> x+y
 farz score, set_score = use_state(none)
@@ -867,6 +842,21 @@ create_rt(
 farz x = 4
 print '$x, $y'
 return 4
+
+farz w, x, = "hello world $", "test $2+3"
+farz y = `test $2+3`
+farz z = 'test \\$$2+3'
+farz string = "world"
+print "hello $string"
+#print(x)
+print("C:\Progra~1\")
+
+mangao sab_kuch react mese
+mangao ReactDOM react-dom/client mese
+mangao App.css, globals.css, React
+mangao React
+mangao ./App
+mangao App ./App mese
 """))
 
 if __name__ == "__main__":

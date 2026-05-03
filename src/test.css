@@ -1,7 +1,7 @@
 body {
     background: purple;
     .container {
-	background: linear-gradient(to right, hotpink, purple);
+        background: linear-gradient(to right, hotpink, purple);
     }
 }
 
@@ -15,6 +15,6 @@ body {
     padding: 0;
     box-sizing: border-box;
     box-shadow: 3px 2px 4px 8px;
-    text-shadow: 2px 1px 3px #900;
+    text-shadow: 2px 1px 3px;
 }
 
