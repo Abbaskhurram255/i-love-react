@@ -45,7 +45,7 @@ def translate_for_css(code: str) -> str:
 		# functions
 		r"ki[\-\_]jaga": "url",
 		# selectors
-		"sab(?:[\-\_  ]?ka)?": "*",
+		"sab(?:[\-\_ ]?ka)?": "*",
 	}
 	code = replace(code, r"[\"']{3}([\s\S]*?)[\"']{3}", r"/*$1*/")
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
@@ -61,7 +61,7 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r" *\: *$", " {")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
 	code = replace(code, " *= *", ": ")
-	code = replace(code, r"(?<![{}:;\/\s])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"(?<![{}:,;\/\s()])(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"\bbg", "background") #intentionally, shouldn't be a word boundary at the end
 	# units
 	code = replace(code, r"(?<=\d)rm\b", "rem")

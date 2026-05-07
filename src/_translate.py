@@ -58,10 +58,12 @@ def translate_for_css(code: str) -> str:
 	for key, value in keys.items():
 		code = replace(code, fr"(?<!\.)\b({key})\b", value)
 	code = replace(code, "\t", " " * 4)
-	code = replace(code, r" *\: *$", " {")
+	code = replace(code, r" *\: *$(?!\\)(?=\n(?: {4,}|\t))", " {")
+	# the fucking sequence matters
+	code = replace(code, r" *\\$", "")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
 	code = replace(code, " *= *", ": ")
-	code = replace(code, r"(?<![{}:;\/\s])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"(?<![{}:,;\/\s()])(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"\bbg", "background") #intentionally, shouldn't be a word boundary at the end
 	# units
 	code = replace(code, r"(?<=\d)rm\b", "rem")
