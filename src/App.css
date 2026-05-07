@@ -1,1 +1,7 @@
-
+body {
+    background: purple;
+    jumle-ka-font: "Roboto", ms-serif;
+    jumle-ka-motapa: bold;
+    jumle-ka-style: italic;
+    jumle-ki-size: 12px;
+}

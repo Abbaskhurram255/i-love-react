@@ -9,7 +9,6 @@ def translate_for_css(code: str) -> str:
 		return ""
 	keys: dict[str, str] = {
 		# properties
-		"bg": "background",
 		"fg|clr": "color",
 		"mt": "margin-top",
 		"mr": "margin-right",
@@ -39,31 +38,36 @@ def translate_for_css(code: str) -> str:
 		# gradients
 		"lg": "linear-gradient",
 		"rg": "radial-gradient",
-		"s(?:i|ee)dhe[_ \-]ha{1,2}th": "to right",
-		"ulte[_ \-]ha{1,2}th": "to left",
-		"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))i[_\- ]tara?f": "to bottom",
-		"upar[_\- ](?:k|wal)i[_ \-]tara?f": "to top",
+		r"s(?:i|ee)dhe[_ \-]ha{1,2}th": "to right",
+		r"ulte[_ \-]ha{1,2}th": "to left",
+		r"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))i[_\- ]tara?f": "to bottom",
+		r"upar[_\- ](?:k|wal)i[_ \-]tara?f": "to top",
 		# functions
-		"load": "var",
-		"ki[-\_]jaga": "url",
+		r"ki[\-\_]jaga": "url",
 		# selectors
-		"sab": "*",
+		"sab(?:[\-\_ ]?ka)?": "*",
 	}
-	code = replace(code, r"#[^\n]*", "")
-	code = replace(code, r"[\"']{3}[\s\S]*?[\"']{3}", "")
-	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
-	# sequence matters
-	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')")
+	code = replace(code, r"[\"']{3}([\s\S]*?)[\"']{3}", r"/*$1*/")
+	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
 	for i, string in enumerate(strings):
 		code = code.replace(string, f"__STRING_{i}__", 1)
+	code = replace(code, r"[#:](?:def(?:ine)?|farz|var)\b", ":root")
+	# keep the sequence AS-IS
+	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
+	# sequence matters
 	for key, value in keys.items():
 		code = replace(code, fr"(?<!\.)\b({key})\b", value)
 	code = replace(code, "\t", " " * 4)
 	code = replace(code, r" *\: *$", " {")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
 	code = replace(code, " *= *", ": ")
-	code = replace(code, r" *\b_ *$", ";")
-	code = replace(code, r"\$ *(?<varname>[A-Za-z_]\w*)", "--$varname")
+	code = replace(code, r"(?<![{}:;\/\s])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"\bbg", "background") #intentionally, shouldn't be a word boundary at the end
+	# units
+	code = replace(code, r"(?<=\d)rm\b", "rem")
+	code = replace(code, r"(?<=\d)dg\b", "deg")
+	code = replace(code, r"^(?<some_whites_at_start>[ \t]+)?\$ *(?<varname>[A-Za-z_][\w\-]*)", "$some_whites_at_start--$varname")
+	code = replace(code, r"\$ *(?<varname>[A-Za-z_][\w\-]*)", "var(--$varname)")
 	while re.search(r"\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
 		code = replace(code, r"\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
 	for j, string in old_enumerate(strings):
@@ -880,6 +884,15 @@ koshish:
     kaho 0/0
 nakami:
     kaho("Javascript does not allow division by zero")
+/
+"""))
+	print(translate_for_css("""
+body:
+    bg: purple
+    jumle-ka-font: "Roboto", ms-serif
+    jumle-ka-motapa: bold
+    jumle-ka-style: italic
+    jumle-ki-size: 12px
 /
 """))
 

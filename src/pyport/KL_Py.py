@@ -2133,7 +2133,8 @@ def replace(src: str, to_replace: str|dict|None = None, replacement: str|Callabl
 	try:
 		result = re.sub(to_replace, replacement, src, flags=flags, count=count)
 	except re.error as e:
-		print(f"re.warning:\n  * Bad regex, or replacement pattern. Returning the original source string as-is. *Reason*: {str(e).capitalize()}.")
+		src_trunc: str = f"{src[:30]}... ..." if len(src) > 30 else src
+		print(f"re.warning:\n  * Bad regex, or replacement pattern '{to_replace}'. Returning the original source string '{src_trunc}' as-is. *Reason*: {str(e).capitalize()}.")
 		result = src
 	return result
 replacei = ireplace = replace_i = i_replace = functools.partial(replace, ignore_case=True)
