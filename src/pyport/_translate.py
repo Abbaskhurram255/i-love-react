@@ -8,6 +8,10 @@ def translate_for_css(code: str) -> str:
 	if not isinstance(code, str):
 		return ""
 	keys: dict[str, str] = {
+		# selectors
+		"sab(?:[\-\_ ]?ka)?": "*",
+		# metas
+		"(?<=@)anim": "keyframes",
 		# properties
 		"fg|clr": "color",
 		"mt": "margin-top",
@@ -44,8 +48,6 @@ def translate_for_css(code: str) -> str:
 		r"upar[_\- ](?:k|wal)i[_ \-]tara?f": "to top",
 		# functions
 		r"ki[\-\_]jaga": "url",
-		# selectors
-		"sab(?:[\-\_ ]?ka)?": "*",
 	}
 	code = replace(code, r"[\"']{3}([\s\S]*?)[\"']{3}", r"/*$1*/")
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
@@ -58,10 +60,12 @@ def translate_for_css(code: str) -> str:
 	for key, value in keys.items():
 		code = replace(code, fr"(?<!\.)\b({key})\b", value)
 	code = replace(code, "\t", " " * 4)
-	code = replace(code, r" *\: *$", " {")
+	code = replace(code, r" *\: *$(?!\\)(?=\n(?: {4,}|\t))", " {")
+	# the fucking sequence matters
+	code = replace(code, r" *\\$", "")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
 	code = replace(code, " *= *", ": ")
-	code = replace(code, r"(?<![{}:,;\/\s()])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"(?<![{}:,;\/\s(])(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"\bbg", "background") #intentionally, shouldn't be a word boundary at the end
 	# units
 	code = replace(code, r"(?<=\d)rm\b", "rem")
@@ -380,6 +384,8 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"\.(?= *>(?! *\d))", "div") #end of div, functional
 	code = replace(code, r"< *btn\b", "<button") #start of button
 	code = replace(code, r"btn(?= *>(?! *\d))", "button") #end of button, functional
+	code = replace(code, r"< *sect\b", "<section") #start of section
+	code = replace(code, r"sect(?= *>(?! *\d))", "section") #end of section, functional
 	while re.search(r"([A-Za-z]+)_([A-Za-z])(\w*)", code):
 		code = re.sub(r"([A-Za-z]+)_([A-Za-z])(\w*)", lambda m: f"{m.group(1)}{m.group(2).upper()}{m.group(3).lower()}", code)
 	# ^ was too needy for this
@@ -805,7 +811,9 @@ fn App:
 	lotao (
 		<.>
 			<. cls="App">
-				<button clk={() -> print("you clicked this button.")}>Click</button>
+				<sect cls="my-section">
+					<button clk={() -> print("you clicked this button.")}>Click</button>
+				</sect>
 			</.>
 		</.>
 	)
@@ -893,6 +901,10 @@ body:
     jumle-ka-motapa: bold
     jumle-ka-style: italic
     jumle-ki-size: 12px
+@anim myAnim {
+    from {}
+    to {}
+}
 /
 """))
 

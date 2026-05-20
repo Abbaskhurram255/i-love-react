@@ -1,5 +1,13 @@
+:root {
+    --background: linear-gradient(45deg, pink, hotpink, purple);
+    --incomplete: radial-gradient(
+        red,
+    purple;
+    );
+}
+
 body {
-    background: purple;
+    background: var(--background);
     jumle-ka-font: "Roboto", ms-serif;
     jumle-ka-motapa: bold;
     jumle-ka-style: italic;

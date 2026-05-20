@@ -65,7 +65,7 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r" *\\$", "")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
 	code = replace(code, " *= *", ": ")
-	code = replace(code, r"(?<![{}:,;\/\s()])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"(?<![{}:,;\/\s(])(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"\bbg", "background") #intentionally, shouldn't be a word boundary at the end
 	# units
 	code = replace(code, r"(?<=\d)rm\b", "rem")
