@@ -1,15 +1,15 @@
-:root {
-    --background: linear-gradient(45deg, pink, hotpink, purple);
-    --incomplete: radial-gradient(
+@farz:
+    $background: linear-gradient(45deg, pink, hotpink, purple)$
+    $incomplete: radial-gradient(
         red,
-    purple;
-    );
-}
+        purple\
+    )$
+/
 
-body {
-    background: var(--background);
-    font-family: "Roboto", ms-serif;
-    font-weight: bold;
-    font-style: italic;
-    font-size: 12px;
-}
+body:
+    bg: var(--background)_
+    jumle-ki-family: "Roboto", ms-serif
+    jumle_ka_motapa: bold
+    font-style: italic
+    font-size: 12px
+;

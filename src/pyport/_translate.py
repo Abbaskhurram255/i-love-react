@@ -53,7 +53,9 @@ def translate_for_css(code: str) -> str:
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
 	for i, string in enumerate(strings):
 		code = code.replace(string, f"__STRING_{i}__", 1)
-	code = replace(code, r"[#:](?:def(?:ine)?|farz|var)\b", ":root")
+	while re.search(r"\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
+		code = replace(code, r"\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
+	code = replace(code, r"[@#:]?(?:def(?:ine)?|farz|var)\b *\: *", ":root:")
 	# keep the sequence AS-IS
 	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
 	# sequence matters
@@ -63,11 +65,10 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, "(\-{2}shadow\:)", r"$1\\")
 	# fixing a bug, often seen with vite's startup sites
 	code = replace(code, r" *\: *$(?!\\)(?=\n(?: {4,}|\t))", " {")
-	# the fucking sequence matters
-	code = replace(code, r" *\\ *$", "")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
 	code = replace(code, " *= *", ": ")
-	code = replace(code, r"(?<![{}:,;\/\s()])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"(?<![{}:,;\\\/\s()_\$])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"(?<!^) *[_\$] *$", ";")
 	code = replace(code, r"\bjuml[ae]-(?:k[ai]-)?", "font-")
 	code = replace(code, r"\bfont-font\b", "font-family")
 	code = replace(code, r"\bfont-color\b", "color")
@@ -78,8 +79,7 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r"(?<=\d)dg\b", "deg")
 	code = replace(code, r"^(?<some_whites_at_start>[ \t]+)?\$ *(?<varname>[A-Za-z_][\w\-]*)", "$some_whites_at_start--$varname")
 	code = replace(code, r"\$ *(?<varname>[A-Za-z_][\w\-]*)", "var(--$varname)")
-	while re.search(r"\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
-		code = replace(code, r"\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
+	code = replace(code, r" *\\ *$", "")
 	for j, string in old_enumerate(strings):
 		code = code.replace(f"__STRING_{j}__", string)
 	return code
@@ -365,7 +365,7 @@ def translate_for_react(code: str) -> str:
 		# kill the need for r-strings
 		# completely
 		strings[i] = replace(strings[i], "(?:(?<=^[A-Za-z])[ler]+|^[ler]+)(?=[A-Za-z]*[\"\'])", "")
-		strings[i] = replace(strings[i], r"(\\[^abfnrtv\\\'\"\nxuUN])", r"\\$1")
+		strings[i] = replace(strings[i], r"(?<!\\)(\\(?![\\abfnrtv\"\']|N(?=\{)|[xuU](?=[A-Fa-f\d]|o(?=\d))))", r"\\$1")
 		code = code.replace(old_string, f"__STRING_{i}__", 1) # editor, here's a NOTE: if it works, DON'T touch it! should be `code.replace(old_string, ...`, i.e. just AS-IS, and NOT replace(strings[i], ...
 		# ^ needed as-is
 	#print(f"{code=}")
@@ -912,6 +912,15 @@ body:
     to {}
 }
 /
+"""))
+	print(translate_for_react("""
+mangao sab_kuch react mese
+mangao ReactDOM react-dom/client mese
+mangao {createRoot} react-dom/client mese
+mangao App.css, globals.css, React
+mangao React
+mangao ./App
+mangao App ./App mese
 """))
 
 if __name__ == "__main__":
