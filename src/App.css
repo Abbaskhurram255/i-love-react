@@ -8,8 +8,8 @@
 
 body {
     background: var(--background);
-    jumle-ka-font: "Roboto", ms-serif;
-    jumle-ka-motapa: bold;
-    jumle-ka-style: italic;
-    jumle-ki-size: 12px;
+    font-family: "Roboto", ms-serif;
+    font-weight: bold;
+    font-style: italic;
+    font-size: 12px;
 }
