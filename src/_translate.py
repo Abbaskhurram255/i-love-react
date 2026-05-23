@@ -9,7 +9,7 @@ def translate_for_css(code: str) -> str:
 		return ""
 	keys: dict[str, str] = {
 		# selectors
-		"sab(?:[\-\_ ]?ka)?": "*",
+		r"sab(?:[\-\_ ]?ka)?": "*",
 		# metas
 		"(?<=@)anim": "keyframes",
 		# properties
@@ -49,7 +49,8 @@ def translate_for_css(code: str) -> str:
 		# functions
 		r"ki[\-\_]jaga": "url",
 	}
-	code = replace(code, r"[\"']{3}([\s\S]*?)[\"']{3}", r"/*$1*/")
+	code = replace(code, r"[\"'@]{3}([\s\S]*?)[\"'@]{3}", r"/*$1*/")
+	code = replace(code, r"\:\:([^\n]+)$", r"//$1")
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
 	for i, string in enumerate(strings):
 		code = code.replace(string, f"__STRING_{i}__", 1)
@@ -62,13 +63,18 @@ def translate_for_css(code: str) -> str:
 	for key, value in keys.items():
 		code = replace(code, fr"(?<!\.)\b({key})\b", value)
 	code = replace(code, "\t", " " * 4)
-	code = replace(code, "(\-{2}shadow\:)", r"$1\\")
+	code = replace(code, r"(\-{2}shadow\:)", r"$1\\")
 	# fixing a bug, often seen with vite's startup sites
-	code = replace(code, r" *\: *$(?!\\)(?=\n)", " {")
-	code = replace(code, r"(?<!\S)\:?\/$", "}")
-	code = replace(code, " *= *", ": ")
+	code = replace(code, r"(?<=\w) *[\:\[] *$(?!\\)(?=\n)", " {")
+	code = replace(code, r"(?<!\S)(?<=(?<=(?<!\S|(?<=\S|(?<=\S) ) ) ) |[\n\t])(?:[\:@]{0,2}[\/\]]|\:{1,2}@?|\.{3})(?!\S)$", "}")
+	# sequence matters,
+	# the following replacement
+	# of \.{3,} with unset
+	# should happen after the closing of the tag (chaos)
+	code = replace(code, r"\.{3,}", "unset")
+	code = replace(code, r"(?<=\w) *= *", ": ")
 	code = replace(code, r"(?<![{}:,;\\\/\s()_\$])(?<!^)(?<!\d__\b) *$", ";")
-	code = replace(code, r"(?<!^) *[_\$] *$", ";")
+	code = replace(code, r"(?<!^) *(?<!\d_)[_\$] *$", ";")
 	code = replace(code, r"\bjuml[ae]-(?:k[ai]-)?", "font-")
 	code = replace(code, r"\bfont-font\b", "font-family")
 	code = replace(code, r"\bfont-color\b", "color")
@@ -82,7 +88,7 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r" *\\ *$", "")
 	# ^ now that we're done, let's remove the line continuation character '\\'(?=$)
 	for j, string in old_enumerate(strings):
-		code = code.replace(f"__STRING_{j}__", string)
+		code = code.replace(f"__STRING_{j}__", string, 1)
 	return code
 
 def translate_for_react(code: str) -> str:

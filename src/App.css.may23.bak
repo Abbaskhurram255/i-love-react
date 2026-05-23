@@ -1,0 +1,28 @@
+@farz:
+    $background: linear-gradient(45deg, pink, hotpink, purple)$
+    $incomplete: radial-gradient(
+        red,
+        purple\
+    )$
+:
+
+body:
+    bg: var(--background)_
+    jumle-ki-family: "Roboto", ms-serif
+    jumle_ka_motapa: bold
+    font-style: italic
+    font-size: 12px
+:
+
+p:
+	color: ...
+	bg: lg(sidhe hath, purple, green)
+:
+
+:: single line comment
+
+@@@
+multi
+line
+comment
+@@@
