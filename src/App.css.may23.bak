@@ -16,7 +16,7 @@ body:
 
 p:
 	color: ...
-	bg: lg(sidhe hath, purple, green)
+	bg: lg(sidhe hath, purple, green)_
 :
 
 :: single line comment

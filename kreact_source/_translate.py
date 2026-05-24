@@ -48,6 +48,9 @@ def translate_for_css(code: str) -> str:
 		r"upar[_\- ](?:k|wal)i[_ \-]tara?f": "to top",
 		# functions
 		r"ki[\-\_]jaga": "url",
+		# keyframe helpers
+		r"shu?ru": "from",
+		r"kha?ta?m": "to",
 	}
 	code = replace(code, r"[\"'@]{3}([\s\S]*?)[\"'@]{3}", r"/*$1*/")
 	code = replace(code, r"\:\:([^\n]+)$", r"//$1")
@@ -65,14 +68,14 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, "\t", " " * 4)
 	code = replace(code, r"(\-{2}shadow\:)", r"$1\\")
 	# fixing a bug, often seen with vite's startup sites
-	code = replace(code, r"(?<=\w) *[\:\[] *$(?!\\)(?=\n)", " {")
+	code = replace(code, r"(?<=[\w\%]) *[\:\[] *$(?!\\)(?=\n)", " {")
 	code = replace(code, r"(?<!\S)(?<=(?<=(?<!\S|(?<=\S|(?<=\S) ) ) ) |[\n\t])(?:[\:@]{0,2}[\/\]]|\:{1,2}@?|\.{3})(?!\S)$", "}")
 	# sequence matters,
 	# the following replacement
 	# of \.{3,} with unset
 	# should happen after the closing of the tag (chaos)
 	code = replace(code, r"\.{3,}", "unset")
-	code = replace(code, r"(?<=\w) *= *", ": ")
+	code = replace(code, r"(?<=[\w\%]) *= *", ": ")
 	code = replace(code, r"(?<![{}:,;\\\/\s()_\$])(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"(?<!^) *(?<!\d_)[_\$] *$", ";")
 	code = replace(code, r"\bjuml[ae]-(?:k[ai]-)?", "font-")
@@ -293,17 +296,14 @@ def translate_for_react(code: str) -> str:
 		strings[i] = strings[i].replace(r"\$", "$")
 		# find the template strings, and if found, for each, post-process
 		if re.search(r"\$\{?[^\}]+\}?", strings[i]):
-				print("here")
-				templates_found_in_string: list[str] = find_matches(strings[i], r"(?<!\\)\$\{?[^\},]+\}?")
-				print(f"{templates_found_in_string=}")
+				templates_found_in_string: list[str] = find_matches(strings[i], r"(?<!\\)\{[^\}]+\}")
 				for templt in templates_found_in_string:
-					# {sum (is|he)} should translate to
-					# sum (is|he): {sum}
-					print(f"here {templt=}")
-					if re.search(r"[^\w:=]$", templt.strip("${}")):
-						templt = "${" + re.sub(r"[^\w:=]+$", "", templt.strip("${}")) + "}"
-					print(f"now {templt=}")
-					processed_templt: str = replace(replace(templt, r"\$\{(?<placeholder_slash_varname>[^\{\} ]+)(?<! )(?: +(?<separator>is|hen?)|[\:\=]) *:? *\}", "$placeholder_slash_varname $separator: ${$placeholder_slash_varname}####"), "(?<!#)####(?!#)", "").replace("=:", ":").replace("::", ":").replace(" : ", ": ")
+					content: str = templt[1:-1]
+					trailing_commas_and_dots: re.Match | None = re.search(r"[,\.!\?;\-\/\*]$", content)
+					processed_templt: str = "{" + content.rstrip(",.!?;-/*") + "}"
+					if trailing_commas_and_dots:
+						processed_templt += trailing_commas_and_dots.group()
+					processed_templt = replace(replace(processed_templt, r"\$\{(?<placeholder_slash_varname>[^\{\} ]+)(?<! )(?: +(?<separator>is|hen?)|[\:\=]) *:? *\}", "$placeholder_slash_varname $separator: ${$placeholder_slash_varname}####"), "(?<!#)####(?!#)", "").replace("=:", ":").replace("::", ":").replace(" : ", ": ")
 					# Warning: the 4-hashes part might seem ridiculous, BUT IS A BUG FIX, and better stay untouched
 					for key, value in keys.items():
 						processed_templt = replace(processed_templt, fr"(?<!\.)\b(({key})(?! ?\: ?\w+))\b", value)
@@ -914,11 +914,26 @@ body:
     jumle-ka-motapa: bold
     jumle-ka-style: italic
     jumle-ki-size: 12px
-@anim myAnim {
-    from {}
-    to {}
-}
-/
+    
+@anim myAnim:
+	shru:
+		background: gray
+	:
+	20%:
+		
+	:
+	khatm:
+		background: pink
+	:
+:
+
+@keyframes myAnim2:
+	from:
+	...
+	to:
+	...
+:
+
 """))
 	print(translate_for_react("""
 mangao sab_kuch react mese
@@ -929,6 +944,9 @@ mangao React
 mangao ./App
 mangao App ./App mese
 """))
+	print(translate_for_react("kaho('$x, $y')"))
+	print(translate_for_react("kaho '${x,} $y.'"))
+	print(translate_for_react("kaho '$3 + $2 = $3+2'"))
 
 if __name__ == "__main__":
 	main()

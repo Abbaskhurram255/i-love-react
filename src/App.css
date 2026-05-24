@@ -16,7 +16,7 @@ body {
 
 p {
     color: unset;
-    background: linear-gradient(to right, purple, green)
+    background: linear-gradient(to right, purple, green);
 }
 
 // single line comment;
