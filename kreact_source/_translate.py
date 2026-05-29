@@ -53,7 +53,7 @@ def translate_for_css(code: str) -> str:
 		r"kha?ta?m": "to",
 	}
 	code = replace(code, r"[\"'@]{3}([\s\S]*?)[\"'@]{3}", r"/*$1*/")
-	code = replace(code, r"\:\:([^\n]+)$", r"//$1")
+	code = replace(code, r"(?<![^\n])\:\:([^\n]+)$", r"//$1")
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
 	for i, string in enumerate(strings):
 		code = code.replace(string, f"__STRING_{i}__", 1)
