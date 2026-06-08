@@ -39,6 +39,21 @@ def translate_for_css(code: str) -> str:
 		"bsi?zi?n?g?": "box-sizing",
 		"bbox": "border-box",
 		"cbox": "content-box",
+		r"jc|just(?:ify)?(?! *\-)": "justify-content",
+		r"ai": "align-items",
+		r"ta": "text-align",
+		# preserve the order
+		r"anda?r(?:[_\- ]ka|uni)?[_\- ]upar(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-top",
+		r"anda?r(?:[_\- ]ka|uni)?[_\- ]s(?:i|ee)dhe[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-right",
+		r"anda?r(?:[_\- ]ka|uni)?[_\- ]n(?:i|ee)che(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-bottom",
+		r"anda?r(?:[_\- ]ka|uni)?[_\- ]ulte[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-left",
+		r"anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding",
+		# preserve the order
+		r"(?<!\-)upar(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-top",
+		r"(?<!\-)s(?:i|ee)dhe[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-right",
+		r"(?<!\-)n(?:i|ee)che(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-bottom",
+		r"(?<!\-)ulte[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-left",
+		r"(?<!\-)fa{1,2}sla": "gap",
 		# gradients
 		"lg": "linear-gradient",
 		"rg": "radial-gradient",
@@ -64,7 +79,7 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
 	# sequence matters
 	for key, value in keys.items():
-		code = replace(code, fr"(?<!\.)\b({key})\b", value)
+		code = replace(code, fr"(?<![\.\#]|(?<=[\.\#]|(?<=[\.\#]) ) )\b({key})\b", value)
 	code = replace(code, "\t", " " * 4)
 	code = replace(code, r"(\-{2}shadow\:)", r"$1\\")
 	# fixing a bug, often seen with vite's startup sites
@@ -591,10 +606,10 @@ def translate_for_react(code: str) -> str:
 	# SEQUENCE MATTERS
 	code = replace(code, r"(?<A>\-?\d*\.?\d+) *\^{3}", "$A^3")
 	code = replace(code, r"(?<A>\-?\d*\.?\d+) *\^{2}", "$A^2")
-	code = replace(code, r"(?<A>\-?\d*\.?\d+) \%(?! *[\-\.\d])", "$A/100")
+	code = replace(code, r"(?<A>\-?\d*\.?\d+) \%(?! *[\=\=\-\.\d\=])", "$A/100")
 	code = replace(code, r"√ ?(?<A>\-?\d*\.?\d+)", "parseInt($A^(1/2))")
 	#Number system
-	code = replace(code, r"(?<=\d) ?z(?<exponent>[\+\-]?\d+)\b", "e$exponent")
+	code = replace(code, r"(?<=\d) ?[Zz](?<exponent>[\+\-]?\d+)\b", "e$exponent")
 	code = replace(code, r"(?<=\d) ?(?:[\*_]|times|guna|mul)? ?so\b", f"*1{'0'*2}")
 	code = replace(code, r"(?<=\d) ?(?:[\*_]|times|guna|mul)? ?hazar\b", f"*1{'0'*3}")
 	code = replace(code, r"(?<=\d) ?(?:[\*_]|times|guna|mul)? ?la{1,2}(?:c|kh)\b", f"*1{'0'*5}")
@@ -943,6 +958,9 @@ mangao App.css, globals.css, React
 mangao React
 mangao ./App
 mangao App ./App mese
+
+fn Component({...props}):
+    ...
 """))
 	print(translate_for_react("kaho('$x, $y')"))
 	print(translate_for_react("kaho '${x,} $y.'"))
