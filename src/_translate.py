@@ -11,65 +11,80 @@ def translate_for_css(code: str) -> str:
 		# selectors
 		r"sab(?:[\-\_ ]?ka)?|all": "*",
 		r"jism": "body",
+		r"(?<ancestor>[A-Za-z_]\w*) (?:me(?: (?:direct|s(?:i|ee)dh[ae]|ate hi) andar)|ke(?: (?:direct|s(?:i|ee)dh[ae])) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar)) (?<descendent>[A-Za-z_]\w*)": "$ancestor > $descendent",
+		r"(?<ancestor>[A-Za-z_]\w*) (?:me(?: andar)?|ke (?:da?rmya{0,2}n|b(?:i|ee)ch|andar)) (?<descendent>[A-Za-z_]\w*)": "$ancestor $descendent",
+		r"(?<descendent>[A-Za-z_]\w*) (?:direct|s(?:i|ee)dh[ae]|ate hi) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar|in) (?<ancestor>[A-Za-z_]\w*)": "$ancestor > $descendent",
+		r"(?<descendent>[A-Za-z_]\w*) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar|in) (?<ancestor>[A-Za-z_]\w*)": "$ancestor $descendent",
+		r"(?<=\:|(?<=\:) )(?:agar|he)(?= *\()": "is",
+		r"(?<=\:|(?<=\:) )(?:ilawa|nahi)(?= *\()": "not",
 		# metas
-		"(?<=@)anim": "keyframes",
+		r"(?<=@)anim": "keyframes",
 		# properties
-		"fg(?:\-co?lo?r)?|clr": "color",
-		"mt": "margin-top",
-		"mr": "margin-right",
-		"mb": "margin-bottom",
-		"ml": "margin-left",
-		"m(?:ar)?gi?n?": "margin",
-		"pt": "padding-top",
-		"pr": "padding-right",
-		"pb": "padding-bottom",
-		"pl": "padding-left",
-		"pa?d": "padding",
-		"bsh(?:a?d(?:ow)?)?": "box-shadow",
-		"tsh(?:a?d(?:ow)?)?": "text-shadow",
-		"brad(?:ius)?": "border-radius",
-		"brtl": "border-radius-top-left",
-		"brtr": "border-radius-top-right",
-		"brbr": "border-radius-bottom-right",
-		"brbl": "border-radius-bottom-left",
-		"bdt": "border-top",
-		"bdr": "border-right",
-		"bdb": "border-bottom",
-		"bdl": "border-left",
-		"bd": "border",
+		r"chorai": "width",
+		r"lambai": "height",
+		r"fg(?:\-co?lo?r)?|clr": "color",
+		r"mt": "margin-top",
+		r"mr": "margin-right",
+		r"mb": "margin-bottom",
+		r"ml": "margin-left",
+		r"m(?:ar)?gi?n?": "margin",
+		r"pt": "padding-top",
+		r"pr": "padding-right",
+		r"pb": "padding-bottom",
+		r"pl": "padding-left",
+		r"pa?d": "padding",
+		r"bsh(?:a?d(?:ow)?)?": "box-shadow",
+		r"tsh(?:a?d(?:ow)?)?": "text-shadow",
+		r"brad(?:ius)?": "border-radius",
+		r"brtl": "border-radius-top-left",
+		r"brtr": "border-radius-top-right",
+		r"brbr": "border-radius-bottom-right",
+		r"brbl": "border-radius-bottom-left",
+		r"bdt": "border-top",
+		r"bdr": "border-right",
+		r"bdb": "border-bottom",
+		r"bdl": "border-left",
+		r"bd": "border",
+		r"(?:vi[sz]|nazar)(?:[\-\_ ]?se)?": "visibility",
+		r"flow|zyada[\-\_ ]phelao": "overflow",
+		r"na[\-\_ ]?a?e|ojhal|chup[aei]w[aei]|g(?:a{1,2}yab|um)": "hidden",
+		r"(?<!n)ae|za{1,2}hir": "visible",
+		r"opa": "opacity",
 		r"(?<=\-)wk(?=\-)": "webkit",
 		r"(?<=\-)mz(?=\-)": "moz",
 		r"(?<=\-)kht(?=\-)": "khtml",
 		r"us": "user-select",
-		"bsi?zi?n?g?": "box-sizing",
-		"bbox": "border-box",
-		"cbox": "content-box",
+		r"bsi?zi?n?g?": "box-sizing",
+		r"bbox": "border-box",
+		r"cbox": "content-box",
 		r"jc|just(?:ify)?(?! *\-)": "justify-content",
 		r"ai": "align-items",
 		r"ta": "text-align",
 		r"pos": "position",
 		r"rel": "relative",
 		r"abs": "absolute",
-		r"place": "inset",
+		r"(?<!\-|(?<=\-) )place(?! *\-)": "inset",
 		# preserve the order
-		r"anda?r(?:[_\- ]ka|uni)?[_\- ]upar(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-top",
-		r"anda?r(?:[_\- ]ka|uni)?[_\- ]s(?:i|ee)dhe[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-right",
-		r"anda?r(?:[_\- ]ka|uni)?[_\- ]n(?:i|ee)che(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-bottom",
-		r"anda?r(?:[_\- ]ka|uni)?[_\- ]ulte[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-left",
-		r"anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding",
+		r"upar(?:[_\- ](?:ka|se))?[_\- ]anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding-top",
+		r"s(?:i|ee)dhe[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding-right",
+		r"n(?:i|ee)che(?:[_\- ](?:ka|se))?[_\- ]anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding-bottom",
+		r"ulte[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding-left",
+		r"(?<!\-)anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding",
 		# preserve the order
-		r"(?<!\-)upar(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-top",
-		r"(?<!\-)s(?:i|ee)dhe[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-right",
-		r"(?<!\-)n(?:i|ee)che(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-bottom",
-		r"(?<!\-)ulte[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "margin-left",
+		r"upar(?:[_\- ](?:ka|se))?[_\- ](?:ber(?:u|oo)ni[_\- ])?fa{1,2}sla": "margin-top",
+		r"s(?:i|ee)dhe[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ](?:ber(?:u|oo)ni[_\- ])?fa{1,2}sla": "margin-right",
+		r"n(?:i|ee)che(?:[_\- ](?:ka|se))?[_\- ](?:ber(?:u|oo)ni[_\- ])?fa{1,2}sla": "margin-bottom",
+		r"ulte[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ](?:ber(?:u|oo)ni[_\- ])?fa{1,2}sla": "margin-left",
+		r"(?<!\-)ber(?:u|oo)ni[_\- ]fa{1,2}sla": "margin",
+		# don't mix the two
 		r"(?<!\-)fa{1,2}sla": "gap",
 		# gradients
-		"lg": "linear-gradient",
-		"rg": "radial-gradient",
-		r"upa?r[_\- ]?(?:k|wal)?[ei][_ \-]tara?f": "to top",
-		r"s(?:i|ee)dh[ei][_ \-](?:ha{1,2}th|tara?f)": "to right",
-		r"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))[ei][_\- ]tara?f": "to bottom",
-		r"ult[ei][_ \-](?:ha{1,2}th|tara?f)": "to left",
+		r"lg": "linear-gradient",
+		r"rg": "radial-gradient",
+		r"(?:upa?r[_\- ]?(?:k|wal)?[ei][_ \-]tara?f|tara?f[_\- ]upa?r[_\- ]?(?:k|wal)?[ei]?)(?!\-)": "to top",
+		r"(?:s(?:i|ee)dh[ei][_ \-](?:ha{1,2}th|tara?f)|tara?f[_\- ]s(?:i|ee)dh[ei])(?:[_ \-](?:ha{1,2}th))?(?!\-)": "to right",
+		r"(?:n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))[ei][_\- ]tara?f|tara?f[_\- ]n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))?[ei])(?!\-)": "to bottom",
+		r"(?:ult[ei][_ \-](?:ha{1,2}th|tara?f)|tara?f[_\- ]ult[ei])(?:[_ \-](?:ha{1,2}th))?(?!\-)": "to left",
 		# functions
 		r"ki[\-\_]jaga": "url",
 		# keyframe helpers
@@ -102,6 +117,7 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r"(?<=[\w\%]) *= *", ": ")
 	code = replace(code, r"(?<![{}:,;\\\/\s()_\$])(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"(?<!^) *(?<!\d_)[_\$] *$", ";")
+	code = replace(code, r"(?<=,) *(?:aur|ya)\b(?= )", "")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bjuml[ae]\-(?:k[ai]\-)?", "font-")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-font\b", "font-family")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-color\b", "color")
@@ -999,6 +1015,32 @@ jism:
 	clr: $textcolor
 	bg: $bgcolor
 /
+
+body me p:
+...
+
+p darmyan body:
+...
+
+h3 ate hi andar body:
+...
+
+:he(input, textarea)::placeholder:
+    color: #bbb
+    
+:ilawa(input, text):
+    nazar: ojhal
+    lambai: ...
+    chorai: ...
+    zyada-phelao-x: zahir
+    zyada-phelao-y: ojhal
+    opa: .6
+    justify-content: center
+    align-items: center
+    place: ...
+    place-content: ...
+...
+
 """))
 
 if __name__ == "__main__":
