@@ -9,11 +9,12 @@ def translate_for_css(code: str) -> str:
 		return ""
 	keys: dict[str, str] = {
 		# selectors
-		r"sab(?:[\-\_ ]?ka)?": "*",
+		r"sab(?:[\-\_ ]?ka)?|all": "*",
+		r"jism": "body",
 		# metas
 		"(?<=@)anim": "keyframes",
 		# properties
-		"fg|clr": "color",
+		"fg(?:\-co?lo?r)?|clr": "color",
 		"mt": "margin-top",
 		"mr": "margin-right",
 		"mb": "margin-bottom",
@@ -36,12 +37,20 @@ def translate_for_css(code: str) -> str:
 		"bdb": "border-bottom",
 		"bdl": "border-left",
 		"bd": "border",
+		r"(?<=\-)wk(?=\-)": "webkit",
+		r"(?<=\-)mz(?=\-)": "moz",
+		r"(?<=\-)kht(?=\-)": "khtml",
+		r"us": "user-select",
 		"bsi?zi?n?g?": "box-sizing",
 		"bbox": "border-box",
 		"cbox": "content-box",
 		r"jc|just(?:ify)?(?! *\-)": "justify-content",
 		r"ai": "align-items",
 		r"ta": "text-align",
+		r"pos": "position",
+		r"rel": "relative",
+		r"abs": "absolute",
+		r"place": "inset",
 		# preserve the order
 		r"anda?r(?:[_\- ]ka|uni)?[_\- ]upar(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-top",
 		r"anda?r(?:[_\- ]ka|uni)?[_\- ]s(?:i|ee)dhe[_\- ]ha{1,2}th(?:[_\- ](?:ka|se))?[_\- ]fa{1,2}sla": "padding-right",
@@ -57,10 +66,10 @@ def translate_for_css(code: str) -> str:
 		# gradients
 		"lg": "linear-gradient",
 		"rg": "radial-gradient",
-		r"s(?:i|ee)dhe[_ \-]ha{1,2}th": "to right",
-		r"ulte[_ \-]ha{1,2}th": "to left",
-		r"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))i[_\- ]tara?f": "to bottom",
-		r"upar[_\- ](?:k|wal)i[_ \-]tara?f": "to top",
+		r"upa?r[_\- ]?(?:k|wal)?[ei][_ \-]tara?f": "to top",
+		r"s(?:i|ee)dh[ei][_ \-](?:ha{1,2}th|tara?f)": "to right",
+		r"n(?:i|ee)ch(?:l|e[_ \-](?:k|wal))[ei][_\- ]tara?f": "to bottom",
+		r"ult[ei][_ \-](?:ha{1,2}th|tara?f)": "to left",
 		# functions
 		r"ki[\-\_]jaga": "url",
 		# keyframe helpers
@@ -72,18 +81,18 @@ def translate_for_css(code: str) -> str:
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
 	for i, string in enumerate(strings):
 		code = code.replace(string, f"__STRING_{i}__", 1)
-	while re.search(r"\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
-		code = replace(code, r"\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
-	code = replace(code, r"[@#:]?(?:def(?:ine)?|farz|var)\b *\: *", ":root:")
+	while re.search(r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
+		code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
+	code = replace(code, r"[@#:]?(?:def(?:ine)?|farz|vars)\b *\: *", ":root:")
 	# keep the sequence AS-IS
 	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
 	# sequence matters
 	for key, value in keys.items():
-		code = replace(code, fr"(?<![\.\#]|(?<=[\.\#]|(?<=[\.\#]) ) )\b({key})\b", value)
+		code = replace(code, fr"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b({key})\b", value)
 	code = replace(code, "\t", " " * 4)
 	code = replace(code, r"(\-{2}shadow\:)", r"$1\\")
-	# fixing a bug, often seen with vite's startup sites
-	code = replace(code, r"(?<=[\w\%]) *[\:\[] *$(?!\\)(?=\n)", " {")
+	# fixing a bug, often seen with vite's startup template
+	code = replace(code, r"(?<=[\w\%\*]) *[\:\[] *$(?!\\)(?=\n)", " {")
 	code = replace(code, r"(?<!\S)(?<=(?<=(?<!\S|(?<=\S|(?<=\S) ) ) ) |[\n\t])(?:[\:@]{0,2}[\/\]]|\:{1,2}@?|\.{3})(?!\S)$", "}")
 	# sequence matters,
 	# the following replacement
@@ -93,11 +102,11 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r"(?<=[\w\%]) *= *", ": ")
 	code = replace(code, r"(?<![{}:,;\\\/\s()_\$])(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"(?<!^) *(?<!\d_)[_\$] *$", ";")
-	code = replace(code, r"\bjuml[ae]-(?:k[ai]-)?", "font-")
-	code = replace(code, r"\bfont-font\b", "font-family")
-	code = replace(code, r"\bfont-color\b", "color")
-	code = replace(code, r"\bfont-mota{1,2}pa\b", "font-weight")
-	code = replace(code, r"\bbg", "background") #intentionally, shouldn't be a word boundary at the end
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bjuml[ae]\-(?:k[ai]\-)?", "font-")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-font\b", "font-family")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-color\b", "color")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-mota{1,2}pa\b", "font-weight")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bbg\b", "background") #intentionally, shouldn't be a word boundary at the end
 	# units
 	code = replace(code, r"(?<=\d)rm\b", "rem")
 	code = replace(code, r"(?<=\d)dg\b", "deg")
@@ -498,13 +507,13 @@ def translate_for_react(code: str) -> str:
 	# sequence matters!
 	# post processing module syntax
 	# which NOW HAS KEYWORD IMPORT instead of mangao
-	code = replace(code, r"\b(?<=import )sabKuch\b", "*")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<=import )sabKuch\b", "*")
 	code = replace(code, r"(?<=,) \b(?:a(?:nd|ur)|ya|(?:ke[_ ]?)?sath)\b", "")
 	# sequence matters!
 	code = replace(code, r"(?<![\t\t])\b(?:f[cn]|act|def) (?:main|start)(?:\([^\)\n\t]*\))?(?=(?: *-> *[\w\?]+)?\:)", "function main()")
 	# operators
 	# try..else
-	code = replace(code, r"\b(?:try|koshish)(?: karo)? (?<x>[^\n]+) (?:else|warna|naka{1,2}mi(?: p(e|ar))?) (?<y>[^\n]+)\b", "try_else(() -> $x, $y)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:try|koshish)(?: karo)? (?<x>[^\n]+) (?:else|warna|naka{1,2}mi(?: p(e|ar))?) (?<y>[^\n]+)\b", "try_else(() -> $x, $y)")
 	# the if[cn]ONDITION(is true, then)=
 	code = replace(code, r"(?<A>[_A-Za-z]\w*) (?:if|agar) ?(?<condition>[^\=\n\t]+)\= ?(?<B>[^\n\t]+)", "$A = $B if not('$A' in globals() or '$A' in locals()) or $A == $condition else $A")
 	# the min= operator
@@ -530,7 +539,7 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<varname>[A-Za-z]\w*) (?:[\^\&][tk]|[\^\&]?(?:za?ba?r(?:da?sti)?|force)) ?\= ?(?:fl(?:oa)?t|d(?:ou)?ble?|Number|nr)\b", "$varname = 0.0 if not('$varname' in globals() or '$varname' in locals()) or not $varname or not isinstance($varname, (str, int, float)) else Flt($varname)")
 	# /made for other types \ | /
 	# comes at last
-	code = replace(code, r"\b(?<varname>[_A-Za-z]\w*) (?:[\^\&][tk]|[\^\&]?(?:za?ba?r(?:da?sti)?|force)) ?\= ?(?<type>[A-Za-z_]\w*)\b", "$varname = get_initial_of('$type') if not('$varname' in globals() or '$varname' in locals()) or not $varname or not isinstance($varname, $type) else $varname")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<varname>[_A-Za-z]\w*) (?:[\^\&][tk]|[\^\&]?(?:za?ba?r(?:da?sti)?|force)) ?\= ?(?<type>[A-Za-z_]\w*)\b", "$varname = get_initial_of('$type') if not('$varname' in globals() or '$varname' in locals()) or not $varname or not isinstance($varname, $type) else $varname")
 	# glitchy self-assignment operator
 	def __self_assignment_operations_replacer__(match: re.Match) -> str:
 		varname: str|list[str] = match.group("varname")
@@ -555,14 +564,14 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<varname>[_A-Za-z]\w*) ?:: ?(?<values>\([^\n\t]+\))", __self_assignment_operations_replacer__)
 	# handle increment
 	# comes before
-	code = replace(code, r"\b(?<varname>[A-Za-z]\w*) (?:me (?<val>[\w\-\.]+\b)(?: k[ao])? (?:(?:barht?a?|da{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|izafa)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?)\b", "$varname+=$val")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<varname>[A-Za-z]\w*) (?:me (?<val>[\w\-\.]+\b)(?: k[ao])? (?:(?:barht?a?|da{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|izafa)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?)\b", "$varname+=$val")
 	# after
-	code = replace(code, r"\b(?<varname>[A-Za-z]\w*)(?:\+{2}|(?: (?:me|k[ao]))? (?:(?:barht?a?|da{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|izafa)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?\b)", "$varname+=1")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<varname>[A-Za-z]\w*)(?:\+{2}|(?: (?:me|k[ao]))? (?:(?:barht?a?|da{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|izafa)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?\b)", "$varname+=1")
 	# handle decrement
 	# comes before
-	code = replace(code, r"\b(?<varname>[A-Za-z]\w*) (?:me(?:[_ ]?se)? (?<val>[\w\-\.]+\b)(?: k[aoi])? (?:(?:ghat{1,2}a?|kam ho|nika{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|ghata|kami?)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?)\b", "$varname-=$val")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<varname>[A-Za-z]\w*) (?:me(?:[_ ]?se)? (?<val>[\w\-\.]+\b)(?: k[aoi])? (?:(?:ghat{1,2}a?|kam ho|nika{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|ghata|kami?)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?)\b", "$varname-=$val")
 	# after
-	code = replace(code, r"\b(?<varname>[A-Za-z]\w*)(?:\-{2}|(?: (?:k[aoi]|me[_ ]?(?:se)?))? (?:(?:ghat{1,2}a?|kam ho|nika{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|ghata|kami?)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?\b)", "$varname-=1")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<varname>[A-Za-z]\w*)(?:\-{2}|(?: (?:k[aoi]|me[_ ]?(?:se)?))? (?:(?:ghat{1,2}a?|kam ho|nika{1,2}l)(?:o|t?[aei] (?:rah|ja|chal)[eo])|ghata|kami?)(?: (?:hot[ai]?|karte)(?: (?:rah|ja|chal)[eo]))?\b)", "$varname-=1")
 	# SEQUENCE MATTERS
 	# IT DOES!
 	# section for membership checks
@@ -626,25 +635,25 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<!\w)(?<nA>\-?\d*\.?\w+) in (?<nB>\-?\d*\.?\d+)\b", "($nA/$nB)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+) (?:ka a{1,2}thwa|eighth|into eight)\b", "(.125*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+) (?:ka chotha|(?:in )(quarter|four)|quartered|fou?rth)\b", "(.25*$n)")
-	code = replace(code, r"\b(?:adh[aei]|hal(?:ved|f[ _](?:of|as))) (?<n>\-?\d*\.?\w+)\b", "(.5*$n)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:adh[aei]|hal(?:ved|f[ _](?:of|as))) (?<n>\-?\d*\.?\w+)\b", "(.5*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+) (?:ka adha|halved|in (?:two|half))\b", "(.5*$n)")
-	code = replace(code, r"\bpon[ae] (?<n>\w+)\b", "(-.25+$n)")
-	code = replace(code, r"\bsawa (?<n>\w+)\b", "(.25+$n)")
-	code = replace(code, r"\bsa{1,2}dhe (?<n>\w+)\b", "(.5+$n)")
-	code = replace(code, r"\b(?:twice(?:[_ ]as)?|d[uo] ?gu?n[aei]) (?<n>\-?\d*\.?\w+)\b", "(2*$n)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bpon[ae] (?<n>\w+)\b", "(-.25+$n)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bsawa (?<n>\w+)\b", "(.25+$n)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bsa{1,2}dhe (?<n>\w+)\b", "(.5+$n)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:twice(?:[_ ]as)?|d[uo] ?gu?n[aei]) (?<n>\-?\d*\.?\w+)\b", "(2*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+)( ka)? (?:twice|d[uo] ?gu?n[aei])\b", "(2*$n)")
-	code = replace(code, r"\b(?:thrice(?:[_ ]as)?|teen gun[aei]) (?<n>\-?\d*\.?\w+)\b", "(3*$n)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:thrice(?:[_ ]as)?|teen gun[aei]) (?<n>\-?\d*\.?\w+)\b", "(3*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+)( ka)? (?:thrice|teen gun[aei])\b", "(3*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+) (?:cha{1,2}r|4) gu?n[aei]\b", "(4*$n)")
 	code = replace(code, r"(?<!\w)(?<n>\-?\d*\.?\w+) (?:a{1,2}th|8) gu?n[aei]\b", "(8*$n)")
 	#code = replace(code, r"(?<!\w)\(?(?<params>(?:[A-Za-z_\.][\w\.]*(?:, *)?)*)\)? ?\->(?= ?\S)", "($params) =>")
 	code = replace(code, r"->", "=>")
 	# the actual support for `x ->` 
-	#code = replace(code, r"\b(?:f[cn]|act) (?<param>[A-Za-z_]\w*)(?=\: ?[^\n]{2,})", "$param")
+	#code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:f[cn]|act) (?<param>[A-Za-z_]\w*)(?=\: ?[^\n]{2,})", "$param")
 	# helps drop the parentheses if the function doesn't allow parameters
 	# f[cn] log: -> f[cn] log():
-	code = replace(code, r"\b(?:f[cn]|act) (?<funcname_followed_not_by_parens>[A-Za-z_]\w*)(?=(?<could_have_a_return_type>[^\(\)\{]+)?\{)", "function $funcname_followed_not_by_parens()")
-	code = replace(code, r"\b(?:f[cn]|act) (?<funcname_regular>[A-Za-z_]\w*)\((?<params>[^\)]+)?\)(?=(?<could_have_a_return_type>[^\:]+)?\:)", "function $funcname_regular($params)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:f[cn]|act) (?<funcname_followed_not_by_parens>[A-Za-z_]\w*)(?=(?<could_have_a_return_type>[^\(\)\{]+)?\{)", "function $funcname_followed_not_by_parens()")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:f[cn]|act) (?<funcname_regular>[A-Za-z_]\w*)\((?<params>[^\)]+)?\)(?=(?<could_have_a_return_type>[^\:]+)?\:)", "function $funcname_regular($params)")
 	# "metaclass" is a keyword argument for the base class
 	# to avoid conflict
 	# comes before ^
@@ -668,7 +677,7 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<=\bclass )(?<B>\w+)(?: (?:of|from|ext(?:ends)?|impl(?:em(?:ents)?)?|follows|is[ _]?an?) | ?[>\/] ?)(?<A>(?:\w+(?:, *)?)+)\b", "$B($A)")
 	# \/ handle (?<=(?:cls|class) )`A [\.>] B` cases
 	code = replace(code, r"(?<=\bclass )(?<A>(?:\w+(?:, *)?)+) (?:produces?|peda karen?|jana?m den?) (?<B>\w+)(?: ko)?\b", "$B($A)")
-	code = replace(code, r"\benum (?<enumclassname>\w+)", "class $enumclassname(Enum)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\benum (?<enumclassname>\w+)", "class $enumclassname(Enum)")
 	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?<replacement_method>replace(?:_first)?)\(", "$replacement_method($varname, ")
 	# >> custom starts_with, and ends_with, that work with arrays as well
 	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:starts_?with)\(", "startswith($varname, ") #custom, comes from KL_Py
@@ -677,7 +686,7 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:sent(?:ence)?_?case|sentn?[cs]s?)\(\)", "sentence_case($varname)")
 	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:is_?(?:snake_?case))\(\)", "is_snake_case($varname)")
 	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:snake_?case)\(\)", "snake_case($varname)")
-	code = replace(code, r"\blambai (?<iterable>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)", "lambai($iterable)" if "lambai" in {**globals(), **locals()} and isinstance(lambai, Callable) else "${iterable}.length")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\blambai (?<iterable>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)", "lambai($iterable)" if "lambai" in {**globals(), **locals()} and isinstance(lambai, Callable) else "${iterable}.length")
 	# don't touch it
 	# doesn't need a work boundary ^
 	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:ki_?)?(?:len(?:gth)?|lambai|size)\b(?! *\()", "lambai($varname)" if "lambai" in {**globals(), **locals()} and isinstance(lambai, Callable) else "${varname}.length")
@@ -687,17 +696,17 @@ def translate_for_react(code: str) -> str:
 	# to avoid conflict
 	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:not|nahi) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)?[ _]?(?:type|kism)(?:of)?) (?<B>[\"'][A-Za-z_][\w\.\|]*[\"'])", "typeof($A) != $B")
 	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)?[ _]?(?:type|kism)(?:of)?) (?<B>[\"'][A-Za-z_][\w\.\|]*[\"'])", "typeof($A) == $B")
-	code = replace(code, r"\b(?:print|kaho) (?<args>[^\(\)\{\}\t\n]+)?", "console.log('' + $args)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:print|kaho) (?<args>[^\(\)\{\}\t\n]+)?", "console.log('' + $args)")
 	code = replace(code, r",? <?(?:(?:might|shayad) (?:throw|raise|de|uthae)|(?:throw|raise)s|uthae) [^\:\n\t]+>?(?=\:)", "")
 	# ^ supposedly after a function f[cn] x({...}?) might throw SomeError, and before a colon
-	code = replace(code, r"\bfarz\b", "let")
-	code = replace(code, r"\b(?:farz|lo|either|yato|kisi) ", "")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfarz\b", "let")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:farz|lo|either|yato|kisi) ", "")
 	code = replace(code, r"(?<=\w )\b(?:present|mojud) (?=\S)", "")
 	code = replace(code, r" (?:(?<=[\w\"\'] )se(?=(?: tabtak)? ?\:)|to|tak|tabtak(?= ?\:)|hua|k[aeio](?:[_ ]?lie)?)\b", "")
-	code = replace(code, r"\b(?:collect(?:ed)?|together|ikhat{1,2}e)\((?<params>(?<firstparam>[^\(\)]+), *(?<restofparams>[^\(\)]+))\)", "collect($params)" if "collect" in {**globals(), **locals()} and callable({**globals(), **locals()}["collect"]) else "list(zip($params))")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:collect(?:ed)?|together|ikhat{1,2}e)\((?<params>(?<firstparam>[^\(\)]+), *(?<restofparams>[^\(\)]+))\)", "collect($params)" if "collect" in {**globals(), **locals()} and callable({**globals(), **locals()}["collect"]) else "list(zip($params))")
 	# sequence matters
 	# core
-	code = replace(code, r"\bf(?=__STRING_\d+__)", "")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bf(?=__STRING_\d+__)", "")
 	# sequence matters
 	code = replace(code, r",(?= ?\b(?:tor|as)\b)", "")
 	# adds a sprinkle of English-like flavor: with open(x, "r") as file [bad] -> with open(x, "r"), as file [better, or at least a little more readable]
@@ -726,7 +735,7 @@ def translate_for_react(code: str) -> str:
 	# sequence should be watched
 	# this comes after the destruction, to see if the destructured value even exists or not:
 	code = replace(code, r"(?<object>[_A-Za-z]\w*)\?\.(?<field>[_A-Za-z]\w*)", "$object.$field if ('$object' in globals() or '$object' in locals()) and hasattr($object, '$field') and $object.$field is not None else {}")
-	code = replace(code, r"\b(?:neither|nato) (?<A>[^\n\t]+) (?:or )?(?:n?or|na(?:[ _]?hi)?) (?<B>[^\n\t]+)", "!($A or $B)")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:neither|nato) (?<A>[^\n\t]+) (?:or )?(?:n?or|na(?:[ _]?hi)?) (?<B>[^\n\t]+)", "!($A or $B)")
 	code = replace(code, r"(?<=(?<![^ \t])[ \t])(?:is|he|kism) (?<type>(?:[A-Za-z]\w*\.?)+)\b(?=(?: (?:as|tor) [A-Za-z_]\w*)?\:)", "case $type()")
 	# KEY-VALUE replacement
 	for key, value in keys.items():
@@ -746,7 +755,7 @@ def translate_for_react(code: str) -> str:
 	# `type x=` = `x: type=`
 	# needed
 	#code = replace(code, r"(?<type>[_A-Za-z\?][\w\[\]\.\|\?]*) (?<varname>[_A-Za-z]\w*) ?\={1}(?!\=)", "$varname: $type =")
-	code = replace(code, r"\b(?<varname>[_A-Za-z]\w*) (expects|ume{0,2}d|chah(?:e|ta)|wants|mange|needs) (?<type>[_A-Za-z\?][\w\[\]\.\|\?]*)", "$varname: $type")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<varname>[_A-Za-z]\w*) (expects|ume{0,2}d|chah(?:e|ta)|wants|mange|needs) (?<type>[_A-Za-z\?][\w\[\]\.\|\?]*)", "$varname: $type")
 	# handling Optionality: default, and null cases
 	# <type>? means the type is optional
 	code = replace(code, r"(?<=\S )\bkwarg\b(?= *[,\)])", "= null")
@@ -758,10 +767,10 @@ def translate_for_react(code: str) -> str:
 	# we need to catch bot sath|case
 	# as sath will not be replaced
 	# with case anymore
-	code = replace(code, r"\b(?:none|koi_na)\b", "null")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:none|koi_na)\b", "null")
 	# REMINDER:
 	# there's a difference between None, and NoneType
-	code = replace(code, r"\b(?:KoiNa)\b", "typeof null")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:KoiNa)\b", "typeof null")
 	code = replace(code, r"(?<!\w)\?(?![\w\.])", "null")
 	# readable index access
 	# sequence MATTERS
@@ -812,7 +821,7 @@ def translate_for_react(code: str) -> str:
 			result += f"let {k} = {v};\n"
 		return result
 	code = replace(code, __python_a_b_eq_x_y_regex__, __python_a_b_eq_x_y_replacer_fn__)
-	code = replace(code, r"\blet let\b", "let")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\blet let\b", "let")
 	for j, string in old_enumerate(strings):
 		code = code.replace(f"__STRING_{j}__", string, 1)
 	# should come after
@@ -965,6 +974,32 @@ fn Component({...props}):
 	print(translate_for_react("kaho('$x, $y')"))
 	print(translate_for_react("kaho '${x,} $y.'"))
 	print(translate_for_react("kaho '$3 + $2 = $3+2'"))
+	print("\n\n")
+	print(translate_for_css("""
+@vars:
+	$textcolor: white
+	$bgcolor: purple
+/
+
+all:
+	mg: 0
+	pd: 0
+	pos: abs
+	place: 0 0 0 0
+	// browser prefixes
+	-wk-us: none
+	-mz-us: none
+	-ms-us: none
+	-o-us: none
+	us: none
+	bsz: bbox
+/
+
+jism:
+	clr: $textcolor
+	bg: $bgcolor
+/
+"""))
 
 if __name__ == "__main__":
 	main()
