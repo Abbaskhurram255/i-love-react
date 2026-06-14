@@ -11,10 +11,10 @@ def translate_for_css(code: str) -> str:
 		# selectors
 		r"sab(?:[\-\_ ]?ka)?|all": "*",
 		r"jism": "body",
-		r"(?<ancestor>[A-Za-z_]\w*) (?:me(?: (?:direct|s(?:i|ee)dh[ae]|ate hi) andar)|ke(?: (?:direct|s(?:i|ee)dh[ae])) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar)) (?<descendent>[A-Za-z_]\w*)": "$ancestor > $descendent",
-		r"(?<ancestor>[A-Za-z_]\w*) (?:me(?: andar)?|ke (?:da?rmya{0,2}n|b(?:i|ee)ch|andar)) (?<descendent>[A-Za-z_]\w*)": "$ancestor $descendent",
-		r"(?<descendent>[A-Za-z_]\w*) (?:direct|s(?:i|ee)dh[ae]|ate hi) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar|in) (?<ancestor>[A-Za-z_]\w*)": "$ancestor > $descendent",
-		r"(?<descendent>[A-Za-z_]\w*) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar|in) (?<ancestor>[A-Za-z_]\w*)": "$ancestor $descendent",
+		r"(?<ancestor>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*) (?:me(?: (?:direct|s(?:i|ee)dh[ae]|ate hi) andar)|ke(?: (?:direct|s(?:i|ee)dh[ae])) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar)) (?<descendent>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*)": "$ancestor > $descendent",
+		r"(?<ancestor>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*) (?:me(?: andar)?|ke (?:da?rmya{0,2}n|b(?:i|ee)ch|andar)) (?<descendent>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*)": "$ancestor $descendent",
+		r"(?<descendent>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*) (?:direct|s(?:i|ee)dh[ae]|ate hi) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar|in) (?<ancestor>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*)": "$ancestor > $descendent",
+		r"(?<descendent>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*) (?:da?rmya{0,2}n|b(?:i|ee)ch|andar|in) (?<ancestor>[A-Za-z_\.#\(\[\:][\w\.#\-\<\>\~\+\-\*\/\(\)\[\]=\"\'\|\^\&\%\:, ]*|\*)": "$ancestor $descendent",
 		r"(?<=\:|(?<=\:) )(?:agar|he)(?= *\()": "is",
 		r"(?<=\:|(?<=\:) )(?:ilawa|nahi)(?= *\()": "not",
 		# metas
@@ -115,15 +115,19 @@ def translate_for_css(code: str) -> str:
 	# should happen after the closing of the tag (chaos)
 	code = replace(code, r"\.{3,}", "unset")
 	code = replace(code, r"(?<=[\w\%]) *= *", ": ")
-	code = replace(code, r"(?<![{}:,;\\\/\s()_\$])(?<!^)(?<!\d__\b) *$", ";")
+	code = replace(code, r"(?<![{}:,;\\\/\s()_\$]|(?<=\bau)r|(?<=\by)a)(?<!^)(?<!\d__\b) *$", ";")
 	code = replace(code, r"(?<!^) *(?<!\d_)[_\$] *$", ";")
-	code = replace(code, r"(?<=,) *(?:aur|ya)\b(?= )", "")
+	code = replace(code, r"(?<=,) *(?:aur|ya)\b(?=[ \n\t])", "")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bjuml[ae]\-(?:k[ai]\-)?", "font-")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-font\b", "font-family")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-color\b", "color")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-mota{1,2}pa\b", "font-weight")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bbg\b", "background") #intentionally, shouldn't be a word boundary at the end
 	# units
+	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{3}", "$A^3")
+	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{2}", "$A^2")
+	#Number system
+	code = replace(code, r"(?<=\d) ?[Zz](?<exponent>[\+\-]?\d+)\b", "e$exponent")
 	code = replace(code, r"(?<=\d)rm\b", "rem")
 	code = replace(code, r"(?<=\d)dg\b", "deg")
 	code = replace(code, r"^(?<some_whites_at_start>[ \t]+)?\$ *(?<varname>[A-Za-z_][\w\-]*)", "$some_whites_at_start--$varname")
@@ -149,9 +153,13 @@ def translate_for_react(code: str) -> str:
 		"f[cn]": "function",
 		r"n(?:a(?:ya|i))": "new",
 		r"hamesha|musalsal": "const",
+		r"mangao(?= *\()": "import",
+		r"baad_baad(?= *\()": "setInterval",
+		r"baad(?= *\()": "setTimeout",
+		r"(?:int[ai]za{1,2}r|sabar)(?= *[A-Za-z_])": "await",
 		r"koshish(?: karo)?": "try",
 		r"naka{1,2}mi": "} catch",
-		"__(?:str|print)__": "toString",
+		"__?(?:str|print)_{0,2}(?= *\(\))": "toString",
 		"__(f(?:mt)?|k)__": "__format__",
 		"c(?:ons)?tr": "constructor",
 		"it": "this",
@@ -214,7 +222,7 @@ def translate_for_react(code: str) -> str:
 		r"kuch(?= ?\()": "any",
 		r"sa{1,2}re(?= ?\()": "all",
 		"ja?bta?k": "while",
-		r"har(?= *[A-Za-z_]\w*)": "for",
+		r"har(?= *\([A-Za-z_]\w*)": "for",
 		"every": "for",
 		r"(?<=\S )(?:andar|(?:with)?in|under|da?rmya{0,2}n|beech|hissa)(?= \S)": " in ",
 		# tests needed, but keep the " in " as-is
@@ -352,8 +360,6 @@ def translate_for_react(code: str) -> str:
 					strings[i] = replace(strings[i], re.escape(templt), processed_templt.replace("${", r"####{####")).replace("####{####", "${") # escaping here is mandatory
 					# NOTE: the RE.ESCAPE part here, is NECESSARY
 					# and allows template strings like "${2+3 he}", "${a+b he}"
-					strings[i] = replace(strings[i], r"(?<=\S\.)\b_cl(?:as)?s_?name\b", "__class__.__name__")
-					strings[i] = replace(strings[i], r"(?<=\S\.)\b_cl(?:as)?s\b", "__class__")
 					# readable index access
 					# sequence MATTERS
 					# sequence is the only thing holding it together
@@ -379,17 +385,12 @@ def translate_for_react(code: str) -> str:
 					strings[i] = replace(strings[i], r"\[(?:(?:(?:\.th(?:i|d|i?rd?))[_ ]?la?st)|\.?[t3](?:i|ee)?(?:s?ra|rd)[_ ]?(?:a{1,2}khri|la?st))\]", "[-3]")
 					strings[i] = replace(strings[i], r"\[(?:(?:(?:\.sec(?:o|d|o?nd?)?|2nd)[_ ]?la?st)|\.?[d2](?:u|oo)?(?:s?ra|nd)[_ ]?(?:a{1,2}khri|la?st))\]", "[-2]")
 					strings[i] = replace(strings[i], r"\[\.?(?:(?:f(?:ir)?st|pehla)|1(?:st|h?la))?[_ ]?(?:\.?(?:la?st|a{1,2}khri))\]", "[-1]")
-					
-					strings[i] = replace(strings[i], r"(?<=^\<)class(?= [\"\'][A-Za-z_][\w\.]*[\"\']\>$)", "kism:")
-					# ^ meaning <class 'int'>  SHOULD BE  <kism 'int'>
-					# dont mess around
-					strings[i] = replace(strings[i], r"^(?<pre>\<(?:kism|class)\:? [\"\'])NoneType(?<post>[\"\']\>)$", "${pre}KoiNa${post}")
 					strings[i] = replace(strings[i], r"^(?<pre>\<(?:kism|class)\:? [\"\'])float(?<post>[\"\']\>)$", "${pre}flt${post}")
 					strings[i] = replace(strings[i], r"^(?<pre>\<(?:kism|class)\:? [\"\'])Number(?<post>[\"\']\>)$", "${pre}nr${post}")
 					strings[i] = replace(strings[i], r"^(?<pre>\<(?:kism|class)\:? [\"\'])bool(?<post>[\"\']\>)$", "${pre}haal${post}")
-					strings[i] = replace(strings[i], r"^\bNone\b$", "koi_na")
-					strings[i] = replace(strings[i], r"^\bTrue\b$", "Han")
-					strings[i] = replace(strings[i], r"^\bFalse\b$", "Nahi")
+					strings[i] = replace(strings[i], r"^\bnull\b$", "koi_na")
+					strings[i] = replace(strings[i], r"^\btrue\b$", "Han")
+					strings[i] = replace(strings[i], r"^\bfalse\b$", "Nahi")
 		# the #### part helps get rid of a bug
 		# this replaces previously removed {formatted_var} functionality with new $-based functionality
 		# WARNING: r"{$1}####" should be as is
@@ -616,9 +617,9 @@ def translate_for_react(code: str) -> str:
 	# the numA .. num
 	# numeric ranges
 	# comes before\/
-	code = replace(code, r"(?<!(?<!\.)\.)(?<n1>\-?\d*\.?\d+) ?(?:\.\.|se) ?(?<n2>\-?\d*\.?\d+)(?: ?(?:\:\:|step|kadam|gap|ba{1,2}d|har(?= ?\d+ ?ke_ba{1,2}d)) ?(?<step_optional>\d+)(?: ?ke[_ ]ba{1,2}d)?[ _\/\-]?\d*)?(?: ke[_ ]lie)?", "range($n1, $n2, $step_optional)")
+	code = replace(code, r"(?<!\w)(?<!(?<!\.)\.)(?<n1>\-?\d*\.?\d+) ?(?:\.\.|se) ?(?<n2>\-?\d*\.?\d+)(?: ?(?:\:\:|step|kadam|gap|ba{1,2}d|har(?= ?\d+ ?ke_ba{1,2}d)) ?(?<step_optional>\d+)(?: ?ke[_ ]ba{1,2}d)?[ _\/\-]?\d*)?(?: ke[_ ]lie)?", "range($n1, $n2, $step_optional)")
 	# comes after\/
-	code = replace(code, r"(?<!\d|(?<!\.)\.)(?:\.\. ?(?<n>\-?\d*\.?\d+))", "range($n)")
+	code = replace(code, r"(?<!\w)(?<!\d|(?<!\.)\.)(?:\.\. ?(?<n>\-?\d*\.?\d+))", "range($n)")
 	# character ranges
 	# comes before\/
 	code = replace(code, r"(?<charA>[\"\']\w[\"\']) ?(?:\.\.|se) ?(?<charB>[\"\']\w[\"\'])(?: ?(?:\:\:|step|kadam|gap|ba{1,2}d|har(?= ?\d+ ?ke_ba{1,2}d)) ?(?<step_optional>\d+)(?: ?ke[_ ]ba{1,2}d)?[ _\/\-]?\d*)?(?: ke[_ ]lie)?", "range($charA, $charB, $step_optional)")
@@ -629,10 +630,10 @@ def translate_for_react(code: str) -> str:
 	code = replace(code, r"(?<![\.\d]|(?<!,) )\.{2,} ?(?<object>[\"']?[_A-Za-z]\w*[\"']?)", "...$object")
 	# handling mathematical operations
 	# SEQUENCE MATTERS
-	code = replace(code, r"(?<A>\-?\d*\.?\d+) *\^{3}", "$A^3")
-	code = replace(code, r"(?<A>\-?\d*\.?\d+) *\^{2}", "$A^2")
-	code = replace(code, r"(?<A>\-?\d*\.?\d+) \%(?! *[\=\=\-\.\d\=])", "$A/100")
-	code = replace(code, r"√ ?(?<A>\-?\d*\.?\d+)", "parseInt($A^(1/2))")
+	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{3}", "$A^3")
+	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{2}", "$A^2")
+	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\%(?! *[\=\=\-\.\w\=])", "$A/100")
+	code = replace(code, r"(?<!\w)√ ?(?<A>\-?\d*\.?\d+)", "parseInt($A^(1/2))")
 	#Number system
 	code = replace(code, r"(?<=\d) ?[Zz](?<exponent>[\+\-]?\d+)\b", "e$exponent")
 	code = replace(code, r"(?<=\d) ?(?:[\*_]|times|guna|mul)? ?so\b", f"*1{'0'*2}")
@@ -670,43 +671,6 @@ def translate_for_react(code: str) -> str:
 	# f[cn] log: -> f[cn] log():
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:f[cn]|act) (?<funcname_followed_not_by_parens>[A-Za-z_]\w*)(?=(?<could_have_a_return_type>[^\(\)\{]+)?\{)", "function $funcname_followed_not_by_parens()")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:f[cn]|act) (?<funcname_regular>[A-Za-z_]\w*)\((?<params>[^\)]+)?\)(?=(?<could_have_a_return_type>[^\:]+)?\:)", "function $funcname_regular($params)")
-	# "metaclass" is a keyword argument for the base class
-	# to avoid conflict
-	# comes before ^
-	# comes after \/
-	# replace "cls" with "class"
-	# to make the future replacements
-	# easier
-	# also, replace "cls" with "class"
-	# ONLY IF the user is not working
-	# on a @classmethod
-	# to avoid conflict
-	code = replace(code, r"(?<=\S\.)\b_cl(?:as)?s_?name\b", "__class__.__name__")
-	code = replace(code, r"(?<=\S\.)\b_cl(?:as)?s\b", "__class__")
-	code = replace(code, r"@calls?[_ ]?me\b", "@classmethod")
-	code = replace(code, r"@(?:abstr(?:act)?|follow|emp?ty?_?body)\b", "@abstractmethod")
-	code = replace(code, r"@auto(c(?:l(?:as)?s|(?:ons)?tr)|make)\b", "@dataclass")
-	# the key-value pair does not remove anything preceded by a ., so...
-	code = replace(code, r"(?<=[\w\)]\.)call\b(?=\()", "__init__")
-	# sequence matters
-	# \/ handle (?<=(?:cls|class) )`B (of|from|>|ext(ends)?|is_?an?) A` cases
-	code = replace(code, r"(?<=\bclass )(?<B>\w+)(?: (?:of|from|ext(?:ends)?|impl(?:em(?:ents)?)?|follows|is[ _]?an?) | ?[>\/] ?)(?<A>(?:\w+(?:, *)?)+)\b", "$B($A)")
-	# \/ handle (?<=(?:cls|class) )`A [\.>] B` cases
-	code = replace(code, r"(?<=\bclass )(?<A>(?:\w+(?:, *)?)+) (?:produces?|peda karen?|jana?m den?) (?<B>\w+)(?: ko)?\b", "$B($A)")
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\benum (?<enumclassname>\w+)", "class $enumclassname(Enum)")
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?<replacement_method>replace(?:_first)?)\(", "$replacement_method($varname, ")
-	# >> custom starts_with, and ends_with, that work with arrays as well
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:starts_?with)\(", "startswith($varname, ") #custom, comes from KL_Py
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:ends_?with)\(", "endswith($varname, ") #custom, comes from KL_Py
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:is_?(?:sent(?:ence)?_?case|sentn?[cs]s?))\(\)", "is_sentence_case($varname)")
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:sent(?:ence)?_?case|sentn?[cs]s?)\(\)", "sentence_case($varname)")
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:is_?(?:snake_?case))\(\)", "is_snake_case($varname)")
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:snake_?case)\(\)", "snake_case($varname)")
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\blambai (?<iterable>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)", "lambai($iterable)" if "lambai" in {**globals(), **locals()} and isinstance(lambai, Callable) else "${iterable}.length")
-	# don't touch it
-	# doesn't need a work boundary ^
-	code = replace(code, r"(?<varname>[\[\{\"\']{1,2}(?:[\-\.\w\"\' ](?:, *)?)+[\]\}\"\']{1,2}|[A-Za-z_][\w\.]*(?:\(\))?)\.\b(?:ki_?)?(?:len(?:gth)?|lambai|size)\b(?! *\()", "lambai($varname)" if "lambai" in {**globals(), **locals()} and isinstance(lambai, Callable) else "${varname}.length")
-	# don't change this\/
 	# the ^\n part stays as-is
 	# the negated version comes before,
 	# to avoid conflict
@@ -723,71 +687,17 @@ def translate_for_react(code: str) -> str:
 	# sequence matters
 	# core
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bf(?=__STRING_\d+__)", "")
-	# sequence matters
-	code = replace(code, r",(?= ?\b(?:tor|as)\b)", "")
-	# adds a sprinkle of English-like flavor: with open(x, "r") as file [bad] -> with open(x, "r"), as file [better, or at least a little more readable]
-	code = replace(code, r"\{(?:\.{3}|\*{1,2})\} *= *(?<obj>[A-Za-z]\w*)", "globals().update(**$obj)")
-	def __destructure_objects__(match):
-		keys = [k.strip() for k in match.group(1).split(',') if k]
-		keys_with_aliases: list[str] = keys.copy()
-		for i, _ in old_enumerate(keys):
-			keys[i] = replace(keys[i], r"tor ([A-Za-z_]\w*) ([A-Za-z_]\w*)", r"$2 as $1")
-			if re.search(r"(?<=\w)(?: (?:as|tor) | ?\: ?)(?=[A-Za-z_])", keys[i]):
-				parts = split(keys[i], r"(?: (?:as|tor) | ?\: ?)")
-				keys[i] = parts[0]
-				keys_with_aliases[i] = parts[1]
-			if keys_with_aliases[i].startswith("...") and len(keys_with_aliases[i]) > 3:
-				keys_with_aliases[i] = f"**{keys[i][3:]}"
-			if keys_with_aliases[i].startswith("**"):
-				keys[i] = keys[i].lstrip("**")
-				keys_with_aliases[i] = keys_with_aliases[i].lstrip("**")
-		obj: str = match.group(2)
-		lhs: str = ", ".join(keys_with_aliases)
-		rhs: str = ", ".join(f"{obj}?.{k}" if k not in ("keys", "values", "items") else (f"{obj}.{k}() if '{obj}' in " + "{**globals(), **locals()}" + f" and isinstance({obj}, dict) else " + "{}") for k in keys)
-		rhs = replace(rhs, r"([A-Za-z_]\w*\.items\(\))", "[list(tuple) for tuple in list($1)]")
-		new_pair: str = lhs + " = " + rhs
-		return new_pair
-	code = replace(code, r"\{([A-Za-z\*][, \w\*\:]*)\} *= *([A-Za-z]\w*)", __destructure_objects__)
 	# sequence should be watched
-	# this comes after the destruction, to see if the destructured value even exists or not:
-	code = replace(code, r"(?<object>[_A-Za-z]\w*)\?\.(?<field>[_A-Za-z]\w*)", "$object.$field if ('$object' in globals() or '$object' in locals()) and hasattr($object, '$field') and $object.$field is not None else {}")
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:neither|nato) (?<A>[^\n\t]+) (?:or )?(?:n?or|na(?:[ _]?hi)?) (?<B>[^\n\t]+)", "!($A or $B)")
-	code = replace(code, r"(?<=(?<![^ \t])[ \t])(?:is|he|kism) (?<type>(?:[A-Za-z]\w*\.?)+)\b(?=(?: (?:as|tor) [A-Za-z_]\w*)?\:)", "case $type()")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:neither|nato) (?<A>[^\s\(\)]+) (?:or )?(?:n?or|na(?:[ _]?hi)?) (?<B>[^\s\(\)]+)", "!($A or $B)")
 	# KEY-VALUE replacement
 	for key, value in keys.items():
 		code = replace(code, r"(?<!\.)\b(" + key + r"(?! ?\: ?\w+))\b", value)
-	code = replace(code, r"(?<type>[A-Za-z]*\w*\.?[A-Za-z]\w*)(?:\[\]|<list>)", "list[$type]")
-	# int[] -> list[int]
-	# int<list> -> list[int]
-	# comes before
-	code = replace(code, r"(?<!\w )(?:type|kism) ?\< ?(?<type>[A-Za-z\?][\w\[\]\|\?\. ]*) ?\>", "$type")
-	# SEQUENCE
-	# this comes after
-	# similar, but different
-	code = replace(code, r"(?<=\w) (?:type|kism) ?\< ?(?<type>[A-Za-z\?][\w\[\]\|\?\. ]*) ?\>", ": $type")
 	# watch the sequence
 	code = replace(code, r"(?<=\=) *(?:not|nahi)(?=\n)", "false")
 	# relies ultimately on the positive lookahead (?= ?\=)
 	# `type x=` = `x: type=`
 	# needed
-	#code = replace(code, r"(?<type>[_A-Za-z\?][\w\[\]\.\|\?]*) (?<varname>[_A-Za-z]\w*) ?\={1}(?!\=)", "$varname: $type =")
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<varname>[_A-Za-z]\w*) (expects|ume{0,2}d|chah(?:e|ta)|wants|mange|needs) (?<type>[_A-Za-z\?][\w\[\]\.\|\?]*)", "$varname: $type")
-	# handling Optionality: default, and null cases
-	# <type>? means the type is optional
-	code = replace(code, r"(?<=\S )\bkwarg\b(?= *[,\)])", "= null")
-	# DON'T edit
-	code = replace(code, r"(?<type>[A-Za-z][\w\[\],\.]*)(?:\?| \boptional\b)(?!\.)", "$type|null")
-	code = replace(code, r"(?<=(?<!\w) {2})(?:sath|case) (?:[\.\?]{3}|ba{1,2}ki|anja{1,2}n)(?=(?: (?:if|agar) [^\:]+)? ?\:)", "case default")
-	# since the key-value replacement has already occured
-	# (scroll up a few lines)
-	# we need to catch bot sath|case
-	# as sath will not be replaced
-	# with case anymore
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:none|koi_na)\b", "null")
-	# REMINDER:
-	# there's a difference between None, and NoneType
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:KoiNa)\b", "typeof null")
-	code = replace(code, r"(?<!\w)\?(?![\w\.])", "null")
+	code = replace(code, r"(?<=(?<!\w) {2})(?:sath|case) (?:[\.\?]{3}|ba{1,2}ki|anja{1,2}n)(?=(?: (?:if|agar) [^\:]+)? ?\:)", "default")
 	# readable index access
 	# sequence MATTERS
 	# sequence is the only thing holding it together
@@ -1016,18 +926,19 @@ jism:
 	bg: $bgcolor
 /
 
-body me p:
+body me .p:
 ...
 
-p darmyan body:
+p#paragraph.class-name > a seedha darmyan body:
 ...
 
 h3 ate hi andar body:
 ...
 
-:he(input, textarea)::placeholder:
+:he(input.x, textarea.y)::placeholder:
     color: #bbb
-    
+...
+
 :ilawa(input, text):
     nazar: ojhal
     lambai: ...
@@ -1041,6 +952,22 @@ h3 ate hi andar body:
     place-content: ...
 ...
 
+"""))
+	print(translate_for_react("""har (farz i=0; i<5; i me 4 ka izafa):
+	print(i)
+/
+jabtak (i<5):
+    kaho(i)
+/"""))
+	print(translate_for_css("""
+x, y, aur
+z:
+	color: ...
+	upar-se-beruni-fasla: 2.1rm
+	upar-se-fasla: 2.1rm
+	upar-se-andruni-fasla: 2.1rm
+	fasla: 20 %
+/
 """))
 
 if __name__ == "__main__":
