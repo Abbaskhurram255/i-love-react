@@ -12,7 +12,7 @@ except Exception:
 if __name__ == "__main__":
 	for root, dirs, files in os.walk("."):
 		for filename in files:
-			if "pyport" in root:
+			if "pyport" in root or "node_modules" in root:
 				continue
 			filename = os.path.normpath(
 				os.path.join(
@@ -23,7 +23,7 @@ if __name__ == "__main__":
 			if not re.search(r"\.[jt]sx?$", filename) and not re.search(r"\.css$", filename):
 				continue
 			print(filename)
-			with open(filename) as f:
+			with open(filename, encoding="utf-8") as f:
 				content: str = f.read()
 			if re.search(r"\.[jt]sx$", filename):
 				updated_content = translate_for_react(content)

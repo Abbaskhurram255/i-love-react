@@ -7,6 +7,9 @@ KREACT_EXE_PATH: str = "kreact.exe"
 PREFIX: str = f"{KREACT_EXE_PATH} && "
 try:
     if not os.path.exists(PACKAGE_JSON_PATH):
+        PACKAGE_JSON_PATH = "./package.json"
+        PACKAGE_JSON_BACKUP_PATH: str = f"{PACKAGE_JSON_PATH}.bak"
+    if not os.path.exists(PACKAGE_JSON_PATH):
         print(f"Error: File '{PACKAGE_JSON_PATH}' not found. Exiting...")
         sys.exit(1)
     if not os.path.exists(KREACT_EXE_PATH):
