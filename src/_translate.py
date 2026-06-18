@@ -237,10 +237,7 @@ def translate_for_react(code: str) -> str:
 		r"(?<n>\d+) +dafa(?= *\:)": "for (let i=0; i<$n; i++)",
 		r"baad(?= ?\()": "setTimeout",
 		r"(with_i(?:ndex)?|numbered)(?= ?\()": "numbered",
-		r"kism(?= *\()": "typeof",
-		r"Shayad(?= ?\[[A-Za-z_])": "Union",
-		r"(?:is|he)_?func(?= ?\()": "callable",
-		r"[Cc]har(?= ?\()": "String",
+		r"new Char(?= *\()": "new String",
 		# * both sides are needed
 		# ^^ much needed
 		# char is the keyword user
@@ -249,19 +246,14 @@ def translate_for_react(code: str) -> str:
 		# actually mean Char
 		# with a capital C
 		# (i.e. the class 'Char' from KL_Py)
-		"lafz|jumla": "String",
-		# "jumle": "list[str]",
-		"flt|d(?:ou)?ble?": "float",
-		# "flts": "list[float]",
-		# "floats": "list[float]",
-		"Nr": "Number",
-		# "Nrs": "list[Number]",
-		"haal|filha{1,2}l": "bool",
-		r"(?:[Yy]es|[Ss]ach|[Hh]an?(?! par))(?! *\()": "true",
-		r"(?:[Nn]o|[Jj]hoot|[Nn]ahi)(?! *\()": "false",
-		r"k(?:lang)?__(?:name|version)": "\"Klang v0.8\"",
-		r"k(?:lang)?__about": r"''",
+		"Char|Str|Lafz|Jumla": "string",
+		"char|str|lafz|jumla": "string",
+		"int(?:eger)?|long|fl(?:oa)?t|d(?:ou)?ble?|[Nn]r": "number",
+		"haal|filha{1,2}l|bool": "boolean",
+		r"(?:True|[Yy]es|[Ss]ach|[Hh]an?(?! par))(?! *\()": "true",
+		r"(?:False|[Nn]o|[Jj]hoot|[Nn]ahi)(?! *\()": "false",
 		# € implement help later
+		r"na(?:ya|i|e)": "new",
 		r"uthao(?= [A-Za-z_])": "throw",
 		r"akhir(?= ?\:)": "finally",
 		r"(?<=(?<=\bn)akami|\bcatch) *tor (?<err_name>[A-Za-z_]\w*)": " ($err_name)",
@@ -385,12 +377,9 @@ def translate_for_react(code: str) -> str:
 					strings[i] = replace(strings[i], r"\[(?:(?:(?:\.th(?:i|d|i?rd?))[_ ]?la?st)|\.?[t3](?:i|ee)?(?:s?ra|rd)[_ ]?(?:a{1,2}khri|la?st))\]", "[-3]")
 					strings[i] = replace(strings[i], r"\[(?:(?:(?:\.sec(?:o|d|o?nd?)?|2nd)[_ ]?la?st)|\.?[d2](?:u|oo)?(?:s?ra|nd)[_ ]?(?:a{1,2}khri|la?st))\]", "[-2]")
 					strings[i] = replace(strings[i], r"\[\.?(?:(?:f(?:ir)?st|pehla)|1(?:st|h?la))?[_ ]?(?:\.?(?:la?st|a{1,2}khri))\]", "[-1]")
-					strings[i] = replace(strings[i], r"^(?<pre>\<(?:kism|class)\:? [\"\'])float(?<post>[\"\']\>)$", "${pre}flt${post}")
-					strings[i] = replace(strings[i], r"^(?<pre>\<(?:kism|class)\:? [\"\'])Number(?<post>[\"\']\>)$", "${pre}nr${post}")
-					strings[i] = replace(strings[i], r"^(?<pre>\<(?:kism|class)\:? [\"\'])bool(?<post>[\"\']\>)$", "${pre}haal${post}")
-					strings[i] = replace(strings[i], r"^\bnull\b$", "koi_na")
-					strings[i] = replace(strings[i], r"^\btrue\b$", "Han")
-					strings[i] = replace(strings[i], r"^\bfalse\b$", "Nahi")
+					strings[i] = replace(strings[i], r"\bnull\b", "koi_na")
+					strings[i] = replace(strings[i], r"\btrue\b", "Han")
+					strings[i] = replace(strings[i], r"\bfalse\b", "Nahi")
 		# the #### part helps get rid of a bug
 		# this replaces previously removed {formatted_var} functionality with new $-based functionality
 		# WARNING: r"{$1}####" should be as is
@@ -674,13 +663,19 @@ def translate_for_react(code: str) -> str:
 	# the ^\n part stays as-is
 	# the negated version comes before,
 	# to avoid conflict
-	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:not|nahi) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)?[ _]?(?:type|kism)(?:of)?) (?<B>[\"'][A-Za-z_][\w\.\|]*[\"'])", "typeof($A) != $B")
-	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)?[ _]?(?:type|kism)(?:of)?) (?<B>[\"'][A-Za-z_][\w\.\|]*[\"'])", "typeof($A) == $B")
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:print|kaho) (?<args>[^\(\)\{\}\t\n]+)?", "console.log('' + $args)")
-	code = replace(code, r",? <?(?:(?:might|shayad) (?:throw|raise|de|uthae)|(?:throw|raise)s|uthae) [^\:\n\t]+>?(?=\:)", "")
-	# ^ supposedly after a function f[cn] x({...}?) might throw SomeError, and before a colon
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfarz\b", "let")
-	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:farz|lo|either|yato|kisi) ", "")
+	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:not|nahi) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)?[ _]?(?:type|kism)(?: ?of)?) [\"\']*(?<B>[A-Za-z_][\w\.\|]*)[\"\']*", "typeof($A) != '$B'")
+	code = replace(code, r"(?<A>[\-\.\w,\"'\[\]]+) (?:instance[ _]?of|(?:is[ _]?)an?|he[_ ]ek|(?:is|he|ki|has|of)[ _]?(?:type|kism)(?: ?of)?) [\"\']*(?<B>[A-Za-z_][\w\.\|]*)[\"\']*", "typeof($A) == '$B'")
+	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:print|kaho) (?<args>[^\(\)\{\}\t\n]+)?", "console.log([$args].join(" "))")
+	code = replace(code, r"(?<![\.\#\@\:\[\$\w]|(?<=\-)\-|(?<=[\.\#\@\:\[\$\w]|(?<=\-)\-|(?<=[\.\#\@\:\[\$\w]|(?<=\-)\-) ) )\bfarz\b(?= [A-Za-z_])", "let")
+	# watch the sequence
+	code = replace(code, r"(?<=\w) *\b(?:farz|lo|li[ae]?)\b *", " = ")
+	code = replace(code, r"(?<!(?<=\w|(?<=\w|(?<=\w|(?<=\w) ) ) ) )\bkism\b *(?<type_for>\b[A-Za-z_]\w*\b) *=? *(?=[\{\{\{\[\[\[A-Za-z_\"\'\[\[\[\{\{\{])", "type $type_for = ")
+	code = replace(code, r"(?<=\w) (?:type|kism) *\< ?(?<type>[A-Za-z_][\w\[\]\|\?\. ]*) ?\>", ": $type")
+	# the internal word boundaries are MANDATORY as well
+	# comes after, FOLLOW THE SEQUENCE
+	code = replace(code, r"(?<=\w) *\bkism\b\:? *", r": ")
+	# come in the end, FOLLOW THE SEQUENCE
+	code = replace(code, r"\bkism\b", "typeof")
 	code = replace(code, r"(?<=\w )\b(?:present|mojud) (?=\S)", "")
 	code = replace(code, r" (?:(?<=[\w\"\'] )se(?=(?: tabtak)? ?\:)|to|tak|tabtak(?= ?\:)|hua|k[aeio](?:[_ ]?lie)?)\b", "")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:collect(?:ed)?|together|ikhat{1,2}e)\((?<params>(?<firstparam>[^\(\)]+), *(?<restofparams>[^\(\)]+))\)", "collect($params)" if "collect" in {**globals(), **locals()} and callable({**globals(), **locals()}["collect"]) else "list(zip($params))")
@@ -958,7 +953,20 @@ h3 ate hi andar body:
 /
 jabtak (i<5):
     kaho(i)
-/"""))
+/
+
+farz x kism<lafz|number> = nai String("hi")
+
+kism Point {
+    x kism nr
+    y kism nr
+}
+
+kism Props {
+    name kism<str>
+    age kism<int>
+}
+"""))
 	print(translate_for_css("""
 x, y, aur
 z:
