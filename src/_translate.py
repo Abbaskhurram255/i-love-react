@@ -136,9 +136,13 @@ def translate_for_css(code: str) -> str:
 	# ^ now that we're done, let's remove the line continuation character '\\'(?=$)
 	for j, string in old_enumerate(strings):
 		code = code.replace(f"__STRING_{j}__", string, 1)
+	code = """
+@import "tailwindcss";
+
+""" + code
 	return code
 
-def translate_for_react(code: str) -> str:
+def translate_for_react(code: str, mode: str = "react") -> str:
 	if not isinstance(code, str):
 		return ""
 	keys: dict[str, str] = {
@@ -153,7 +157,7 @@ def translate_for_react(code: str) -> str:
 		"f[cn]": "function",
 		r"n(?:a(?:ya|i))": "new",
 		r"hamesha|musalsal": "const",
-		r"mangao(?= *\()": "import",
+		r"mangao(?= *\()": "require",
 		r"baad_baad(?= *\()": "setInterval",
 		r"baad(?= *\()": "setTimeout",
 		r"(?:int[ai]za{1,2}r|sabar)(?= *[A-Za-z_])": "await",
@@ -747,8 +751,12 @@ def translate_for_react(code: str) -> str:
 		code = code.replace(f"__STRING_{j}__", string, 1)
 	# should come after
 	code = replace(code, r"(?<=(?:\bfrom|(?<=\bim)port) )`(?<module>[A-Za-z\.][\w\.\\\/-]*)`(?!\w)", "\'$module\'")
-	if not re.search(r"(?<=(?:\bfrom|(?<=\bim)port) )[\"\'\`]react[\"\'\`](?!\w)", code) and not code.strip().startswith("import * as React"):
-		code = f"import * as React from 'react';\nObject.assign(window, React);\n\n{code}"
+	if not re.search(r"(?<=(?:\bfrom|(?<=\bim)port) )[\"\'\`]react[\"\'\`](?!\w)", code) and not code.strip().startswith("import * as React") and mode != "node":
+		code = """import * as React from "react";
+Object.assign(window, React);
+""" + """import {BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
+
+""" + code
 	return code
 
 def main() -> None:
@@ -966,6 +974,8 @@ kism Props {
     name kism<str>
     age kism<int>
 }
+
+x = mangao("x")
 """))
 	print(translate_for_css("""
 x, y, aur

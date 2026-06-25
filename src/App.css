@@ -1,3 +1,10 @@
+
+@import "tailwindcss";
+
+
+@import "tailwindcss";
+
+@import "tailwindcss";
 :root {
     --background: linear-gradient(45deg, pink, hotpink, purple);
     --incomplete: radial-gradient(

@@ -7,8 +7,8 @@ if !errorlevel! neq 0 (
     exit /b 1
 )
 if not exist "node_modules" (
-    echo Not a valid Kreact project directory.
-    echo This script belongs at the root of a Kreact project
+    echo Not a valid Kreact/Knode project directory.
+    echo This script belongs at the root of a Kreact/Knode project
     exit /b 1
 )
 

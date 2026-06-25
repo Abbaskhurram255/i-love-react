@@ -26,7 +26,7 @@ if __name__ == "__main__":
 			with open(filename, encoding="utf-8") as f:
 				content: str = f.read()
 			if re.search(r"\.[jt]sx?$", filename):
-				updated_content = translate_for_react(content)
+				updated_content = translate_for_react(content, mode="node" if filename.endswith(".js") else "react")
 			else:
 				print("processing the css...")
 				updated_content = translate_for_css(content)
