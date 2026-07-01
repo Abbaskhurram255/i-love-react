@@ -14,6 +14,8 @@ if __name__ == "__main__":
 		for filename in files:
 			if "pyport" in root or "node_modules" in root:
 				continue
+			if re.search(r"(?:^vite\b|\.config\.)", filename):
+				continue
 			filename = os.path.normpath(
 				os.path.join(
 					root,

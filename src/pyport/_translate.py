@@ -99,6 +99,7 @@ def translate_for_css(code: str) -> str:
 	while re.search(r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
 		code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
 	code = replace(code, r"[@#:]?(?:def(?:ine)?|farz|vars)\b *\: *", ":root:")
+	code = replace(code, r" +\bk[aei]\b", "")
 	# keep the sequence AS-IS
 	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
 	# sequence matters
@@ -123,6 +124,7 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-color\b", "color")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-mota{1,2}pa\b", "font-weight")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bbg\b", "background") #intentionally, shouldn't be a word boundary at the end
+	code = replace(code, r"(?<=\ba) *(?:goto|jao|kholo)\b *(?=\=)", " href")
 	# units
 	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{3}", "$A^3")
 	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{2}", "$A^2")
@@ -136,8 +138,8 @@ def translate_for_css(code: str) -> str:
 	# ^ now that we're done, let's remove the line continuation character '\\'(?=$)
 	for j, string in old_enumerate(strings):
 		code = code.replace(f"__STRING_{j}__", string, 1)
-	code = """
-@import "tailwindcss";
+	if '@import "tailwindcss"' not in code:
+		code = """@import "tailwindcss";
 
 """ + code
 	return code
@@ -163,7 +165,7 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		r"(?:int[ai]za{1,2}r|sabar)(?= *[A-Za-z_])": "await",
 		r"koshish(?: karo)?": "try",
 		r"naka{1,2}mi": "} catch",
-		"__?(?:str|print)_{0,2}(?= *\(\))": "toString",
+		r"__?(?:str|print)_{0,2}(?= *\(\))": "toString",
 		"__(f(?:mt)?|k)__": "__format__",
 		"c(?:ons)?tr": "constructor",
 		"it": "this",
@@ -234,7 +236,7 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		r"(?:limit|da?rmya{0,2}n|b(?:et)?w(?:een)?)(?= *\()": "range",
 		r"next(?= [^ \(])": "yield",
 		r"(?<=(?<!\w) {2})ruko": "break",
-		r"(?<=(?<!\w) {2})ignore(?= ?[^\(])": "continue",
+		r"(?<=(?<!\w) {2})(?:ignore(?: karo)?|chor(?:[_ ]*d)?o|chor(?:[_ ]*k[_ ]?)?e chal(?:te[_ ]?rah)?o)(?! *[^\n])": "continue",
 		# ignore only translates to continue as long as it's indented
 		# and ISN'T followed by a (
 		# no messing around^
@@ -288,7 +290,7 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		# storing the original comment for later
 		processed_multi_line_comment: str = multi_line_comment[3:-3]
 		processed_multi_line_comment = re.sub("[^\n]*\n[^\n]*", "\n", processed_multi_line_comment)
-		code = code.replace(unprocessed_multi_line_comment, processed_multi_line_comment)
+		code = code.replace(unprocessed_multi_line_comment, processed_multi_line_comment, 1)
 	# Remove strings (actual strings, now that multi-line comments are GONE)
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"(?<![\`\\])(?:\`{1}|\`{3})[^\`]*(?:\`{1}|\`{3})(?!\`)")
 	# added partial support for apostrophe strings (strings initiated with an apostrophe, rather than quotes)
@@ -424,6 +426,9 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 	# hashes (#'s') TOO
 	code = replace(code, r"#[^\n]*", "")
 	code = replace(code, "\t", FOUR_WHITES)
+	code = replace(code, r"(?<=[A-Za-z_\)\]\}]) +k[aeio] +(?!(?:and|aur|ya|or|(?:chot|bar)[aie]|kism)\b)(?=[A-Za-z_])", ".")
+	# the sequence is a must
+	code = replace(code, r" (?:(?<=[\w\"\'] )se(?=(?: tabtak)? ?\:)|to|tak|k[ie](?:[_ ]?lie)?|\bse(?: joke(?: (?:khud|(?:it)?self))?)?|tabtak(?= ?\:)|hua|joke(?: (?:khud|(?:it)?self))?|k[aio](?:[_ ]?lie)?(?! *[A-Za-z_]))\b", "")
 	code = replace(code, r"(?<= {4})(\.+|ba{1,2}d_?me|later|pass)(?![^\n])", "throw new Error('Function not implemented.')")
 	code = replace(code, r"\:(?= *\n)", " {")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
@@ -976,16 +981,23 @@ kism Props {
 }
 
 x = mangao("x")
+
+musalsal [x, setX] = React ki useState(0) ka
+
+farz x = 10
 """))
 	print(translate_for_css("""
 x, y, aur
-z:
+z ka:
 	color: ...
 	upar-se-beruni-fasla: 2.1rm
 	upar-se-fasla: 2.1rm
 	upar-se-andruni-fasla: 2.1rm
 	fasla: 20 %
 /
+
+body ka p:
+    color: gray
 """))
 
 if __name__ == "__main__":
