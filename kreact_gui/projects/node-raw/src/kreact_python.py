@@ -1,0 +1,36 @@
+import os, sys, re
+from typing import Callable, Any
+from KL_Py import replace
+from _translate import translate_for_react, translate_for_css
+
+import subprocess
+try:
+	subprocess.run([r"pyport\python.exe", r"patch-package-json.py"])
+except Exception:
+	...
+
+if __name__ == "__main__":
+	for root, dirs, files in os.walk("."):
+		for filename in files:
+			if "pyport" in root or "node_modules" in root:
+				continue
+			if re.search(r"(?:^vite\b|\.config\.)", filename):
+				continue
+			filename = os.path.normpath(
+				os.path.join(
+					root,
+					filename
+				)
+			)
+			if not re.search(r"\.[jt]sx?$", filename) and not re.search(r"\.css$", filename):
+				continue
+			print(filename)
+			with open(filename, encoding="utf-8") as f:
+				content: str = f.read()
+			if re.search(r"\.[jt]sx?$", filename):
+				updated_content = translate_for_react(content, mode="node" if filename.endswith(".js") else "react")
+			else:
+				print("processing the css...")
+				updated_content = translate_for_css(content)
+			with open(filename, mode="w") as f:
+				f.write(updated_content)

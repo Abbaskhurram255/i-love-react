@@ -695,7 +695,7 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:neither|nato) (?<A>[^\s\(\)]+) (?:or )?(?:n?or|na(?:[ _]?hi)?) (?<B>[^\s\(\)]+)", "!($A or $B)")
 	# KEY-VALUE replacement
 	for key, value in keys.items():
-		code = replace(code, r"(?<!\.)\b(" + key + r"(?! ?\: ?\w+))\b", value)
+		code = replace(code, r"(?<!\.)\b(" + key + r"(?! *\: *\w+)(?!\-))\b", value)
 	# watch the sequence
 	code = replace(code, r"(?<=\=) *(?:not|nahi)(?=\n)", "false")
 	# relies ultimately on the positive lookahead (?= ?\=)
