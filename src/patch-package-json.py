@@ -15,9 +15,9 @@ try:
     if not os.path.exists(KREACT_EXE_PATH):
         print(f"Warning *: '{KREACT_EXE_PATH}' is missing. The script will be added anyway.")
     data: dict[str, Any] = {}
-    with open(PACKAGE_JSON_PATH, mode="r") as file:
+    with open(PACKAGE_JSON_PATH, mode="r", encoding="utf-8") as file:
         data = json.load(file)
-    with open(PACKAGE_JSON_BACKUP_PATH, mode="w") as file:
+    with open(PACKAGE_JSON_BACKUP_PATH, mode="w", encoding="utf-8") as file:
         json.dump(data, file, indent=4)
     scripts: dict = data.get("scripts", {})
     if not isinstance(scripts, dict):
@@ -35,7 +35,7 @@ try:
         new_command = f"{PREFIX.strip(' &')}"
     scripts.update(prebuild=new_command.strip())
     data.update(scripts=scripts)
-    with open(PACKAGE_JSON_PATH, mode="w") as file:
+    with open(PACKAGE_JSON_PATH, mode="w", encoding="utf-8") as file:
         json.dump(data, file, indent=4)
     print("package.json patched succesfully.")
 except (FileNotFoundError, PermissionError, json.JSONDecodeError) as e:

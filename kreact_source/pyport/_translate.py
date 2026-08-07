@@ -45,6 +45,7 @@ def translate_for_css(code: str) -> str:
 		r"bdb": "border-bottom",
 		r"bdl": "border-left",
 		r"bd": "border",
+		r"disp?": "display",
 		r"(?:vi[sz]|nazar)(?:[\-\_ ]?se)?": "visibility",
 		r"flow|zyada[\-\_ ]phelao": "overflow",
 		r"na[\-\_ ]?a?e|ojhal|chup[aei]w[aei]|g(?:a{1,2}yab|um)": "hidden",
@@ -99,7 +100,7 @@ def translate_for_css(code: str) -> str:
 	while re.search(r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b([A-Za-z]\w*) *_ *(?!STRING)([A-Za-z]\w*)\b", code):
 		code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?<current>[A-Za-z]\w*) *_ *(?!STRING)(?<next>[A-Za-z]\w*)\b", "$current-$next")
 	code = replace(code, r"[@#:]?(?:def(?:ine)?|farz|vars)\b *\: *", ":root:")
-	code = replace(code, r" +\bk[aei]\b", "")
+	code = replace(code, r" +\bk[aei]\b(?! upar\b)", "")
 	# keep the sequence AS-IS
 	code = replace(code, r"@? *mangao *[\"\']?([\w\-\.\\\/]+)[\"\']?", "@import '$1'")
 	# sequence matters
@@ -124,7 +125,17 @@ def translate_for_css(code: str) -> str:
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-color\b", "color")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bfont-mota{1,2}pa\b", "font-weight")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\bbg\b", "background") #intentionally, shouldn't be a word boundary at the end
-	code = replace(code, r"(?<=\ba) *(?:goto|jao|kholo)\b *(?=\=)", " href")
+	# comes before, this one:
+	code = replace(code, r"(?:&+ +|ke )?\bu?p(?:ar|e)\b +(?<action>\S+)(?: +p(?:ar|e))?\b", "&:$action")
+	# sequence,
+	# if messed with,
+	# will screw this up
+	# comes after, this one:
+	code = replace(
+		code,
+		r"(?<!(?<=(?:(?<=pa)r|(?<=p)e)\b|(?:(?<=pa)r|(?<=p)e)\b|(?<=(?:(?<=pa)r|(?<=p)e)\b|(?<=(?:(?<=pa)r|(?<=p)e)\b|(?<=(?:(?<=pa)r|(?<=p)e))\b ) ) ) )\b(?<action>\S+) +p(?:ar|e)\b",
+		"&:$action"
+	)
 	# units
 	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{3}", "$A^3")
 	code = replace(code, r"(?<!\w)(?<A>\-?\d*\.?\d+) *\^{2}", "$A^2")
@@ -149,14 +160,17 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		return ""
 	keys: dict[str, str] = {
 		# functions, and classes
-		"dcm": "document",
-		"qs": "document.querySelector",
-		"qs[Aa](?:ll)?": "document.querySelectorAll",
+		r"dcm": "document",
+		r"qs": "document.querySelector",
+		r"qs[Aa](?:ll)?": "document.querySelectorAll",
 		r"cls(?= *\=)": "className",
 		r"cl(?:ic)?k(?= *\=)": "onClick",
-		r"loc(?= *\=)": "src",
-		r"alt[_\-]?[Tt]ext": "alt",
-		"f[cn]": "function",
+		r"(?:im|ta?sw(?:i|ee)?r)": "img",
+		r"(?:loc|zaria)(?= *\=)": "src",
+		r"(?:alt[_\-]?[Tt]ext|agar[_\-]?[Nn]a[_\-]?[Mm]ojud)(?= *\=)": "alt",
+		r"(?:sty|css|anda{1,2}z)(?= *\=)": "style",
+		r"lnk": "a",
+		r"f[cn]": "function",
 		r"n(?:a(?:ya|i))": "new",
 		r"hamesha|musalsal": "const",
 		r"mangao(?= *\()": "require",
@@ -166,19 +180,19 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		r"koshish(?: karo)?": "try",
 		r"naka{1,2}mi": "} catch",
 		r"__?(?:str|print)_{0,2}(?= *\(\))": "toString",
-		"__(f(?:mt)?|k)__": "__format__",
-		"c(?:ons)?tr": "constructor",
-		"it": "this",
-		"its": "this",
-		"me": "this",
-		"mera": "this",
-		"apna": "this",
-		"meri": "this",
-		"mujhe": "this",
+		r"__(f(?:mt)?|k)__": "__format__",
+		r"c(?:ons)?tr": "constructor",
+		r"it": "this",
+		r"its": "this",
+		r"me": "this",
+		r"mera": "this",
+		r"apna": "this",
+		r"meri": "this",
+		r"mujhe": "this",
 		# diff: capital first, not-capital first
 		r"khud(?:[_ ]?k[aeio])?": "this",
-		"my": "this",
-		"mom": "super",
+		r"my": "this",
+		r"mom": "super",
 		r"ret|out|lota{1,2}o": "return",
 		# math
 		r"(?<=\S )div(?= \S)": "/",
@@ -203,7 +217,7 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		# ^ a shorter way to say `else: ret|return|out X|Y` would be `else ret|return|out X|Y` without a colon
 		"othe?r?ws[_ ]?if|warna?[_ ]?agar": "else if",
 		r"othe?r?ws(?![_ ]?if)|warna(?![_ ]?a?gar)": "else",
-		"(?<!(?:but|par|(?<=wa)rna|(?<=e)l(?:se|if))[_ ])(?:agar|tab[_ ]jab)(?![_ ]match)": "if",
+		r"(?<!(?:but|par|(?<=wa)rna|(?<=e)l(?:se|if))[_ ])(?:agar|tab[_ ]jab)(?![_ ]match)": "if",
 		# regular else
 		# leave it as-is
 		# sequence
@@ -227,9 +241,9 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		r"(?:nahi|na[_ ]mojud|kha{1,2}li|(?:is|ai)n'?t)(?= \S)": "!",
 		r"kuch(?= ?\()": "any",
 		r"sa{1,2}re(?= ?\()": "all",
-		"ja?bta?k": "while",
+		r"ja?bta?k": "while",
 		r"har(?= *\([A-Za-z_]\w*)": "for",
-		"every": "for",
+		r"every": "for",
 		r"(?<=\S )(?:andar|(?:with)?in|under|da?rmya{0,2}n|beech|hissa)(?= \S)": " in ",
 		# tests needed, but keep the " in " as-is
 		r"until(?= ?\()": "in range",
@@ -252,10 +266,10 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		# actually mean Char
 		# with a capital C
 		# (i.e. the class 'Char' from KL_Py)
-		"Char|Str|Lafz|Jumla": "string",
-		"char|str|lafz|jumla": "string",
-		"int(?:eger)?|long|fl(?:oa)?t|d(?:ou)?ble?|[Nn]r": "number",
-		"haal|filha{1,2}l|bool": "boolean",
+		r"Char|Str|Lafz|Jumla": "string",
+		r"char|str|lafz|jumla": "string",
+		r"int(?:eger)?|long|fl(?:oa)?t|d(?:ou)?ble?|[Nn]r": "number",
+		r"haal|filha{1,2}l|bool": "boolean",
 		r"(?:True|[Yy]es|[Ss]ach|[Hh]an?(?! par))(?! *\()": "true",
 		r"(?:False|[Nn]o|[Jj]hoot|[Nn]ahi)(?! *\()": "false",
 		# € implement help later
@@ -265,6 +279,49 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		r"(?<=(?<=\bn)akami|\bcatch) *tor (?<err_name>[A-Za-z_]\w*)": " ($err_name)",
 		#"tor(?= [A-Za-z_])": "as",
 	}
+	inline_css_objects: list[str] = find_matches(
+		code,
+		r"(?<=\=|(?<=\=|(?<=\=) ) )\{\{[^\}]+:[^\}]+\}\}"
+	)
+	for inline_css_object in inline_css_objects:
+		parsed_inline_css_object: str = translate_for_css(
+			inline_css_object\
+				[2:-2]\
+				.strip()
+		)
+		if parsed_inline_css_object\
+			.lower()\
+			.startswith("@import ")\
+				and ";" in parsed_inline_css_object:
+					parsed_inline_css_object =\
+						parsed_inline_css_object\
+							.split(
+								";",
+								maxsplit=1
+							)\
+								[1]\
+								.strip()
+		hyphen_case_re: str = r"(?P<prev_word>[A-Za-z]+)\-(?P<current_word_first_char>[A-Za-z])"
+		hyphen_case_re_compiled: re.Pattern = re.compile(
+			hyphen_case_re
+		)
+		while hyphen_case_re_compiled\
+			.search(parsed_inline_css_object):
+				parsed_inline_css_object =\
+					hyphen_case_re_compiled.sub(
+						lambda m:\
+							m.group("prev_word")\
+								+ m.group("current_word_first_char")\
+									.upper(),
+						parsed_inline_css_object
+					)
+		code = replace(
+			code,
+			inline_css_object,
+			"{{"\
+				+ parsed_inline_css_object\
+			+ "}}"
+		)
 	# Remove comments
 	# --- since they're only meant for the developer ---
 	# to help us save memory,
@@ -438,6 +495,7 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 	code = replace(code, r"btn(?= *>(?! *\d))", "button") #end of button, functional
 	code = replace(code, r"< *sect\b", "<section") #start of section
 	code = replace(code, r"sect(?= *>(?! *\d))", "section") #end of section, functional
+	code = replace(code, r"(?<=\ba|(?<=\bln)k) *(?:goto|jao|kholo)\b *(?=\=)", " href")
 	while re.search(r"([A-Za-z]+)_([A-Za-z])(\w*)", code):
 		code = re.sub(r"([A-Za-z]+)_([A-Za-z])(\w*)", lambda m: f"{m.group(1)}{m.group(2).upper()}{m.group(3).lower()}", code)
 	# ^ was too needy for this
@@ -738,8 +796,9 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 	# custom data types
 	# much needed
 	# Restore strings
-	__python_a_b_eq_x_y_regex__: str = r"(?<keys>(?:[A-Za-z_]\w*(?:, *(?:aur )?))+) *= *(?<values>[^\n]+)"
+	__python_a_b_eq_x_y_regex__: str = r"(?<prefix>\bconst )?(?<keys>(?:[A-Za-z_]\w*(?:, *(?:aur )?))+) *= *(?<values>[^\n]+)"
 	def __python_a_b_eq_x_y_replacer_fn__(m: re.Match|None) -> str:
+		prefix: str = m.group("prefix") or ''
 		key_group: str = m.group("keys")
 		value_group: str = m.group("values")
 		keys: list[str] = [k.strip() for k in re.split(", *(?:aur )?", key_group) if "," in key_group]
@@ -748,7 +807,7 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		for k, v in zip(keys, values):
 			if not k or not v:
 				continue
-			result += f"let {k} = {v};\n"
+			result += f"{'const' if prefix.strip() else 'let'} {k} = {v};\n"
 		return result
 	code = replace(code, __python_a_b_eq_x_y_regex__, __python_a_b_eq_x_y_replacer_fn__)
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\blet let\b", "let")
@@ -982,9 +1041,13 @@ kism Props {
 
 x = mangao("x")
 
-musalsal [x, setX] = React ki useState(0) ka
+musalsal [x, setX] = React ki useState(0)
 
 farz x = 10
+
+<. andaz={{background_color: "red"}}>
+	
+</.>
 """))
 	print(translate_for_css("""
 x, y, aur
@@ -992,13 +1055,53 @@ z ka:
 	color: ...
 	upar-se-beruni-fasla: 2.1rm
 	upar-se-fasla: 2.1rm
-	upar-se-andruni-fasla: 2.1rm
+	upar_se_andruni_fasla: 2.1rm
 	fasla: 20 %
 /
 
-body ka p:
-    color: gray
+body me p:
+	dis: flex
+	color: gray
+	hover pe:
+		color: #222
+	/
+/
 """))
+	print(
+		translate_for_css(
+			"""
+style={{
+	color: red
+	bg: ...
+}}
+			"""
+		)
+	)
+	print(
+		translate_for_react(
+			"""
+			<. id="div1" sty={{
+				dis: 'flex', clr: 'gray', ai: 'center', test-in-g: 'somevalue'
+				}}
+			>
+				
+			</.>
+			<. id="div2" sty={{
+				dis: 'flex',
+				clr: 'gray',
+				ai: 'center',
+				test-in-g: 'somevalue'
+			}}>
+				<a goto=".">
+					<tasweer
+						zaria="assets/images/girl-surprised.png"
+						agar_na_mojud="Image could not be found"
+					/>
+				</a>
+			</.>
+			"""
+		)
+	)
 
 if __name__ == "__main__":
 	main()

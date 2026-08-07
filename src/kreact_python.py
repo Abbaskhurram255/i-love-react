@@ -32,5 +32,5 @@ if __name__ == "__main__":
 			else:
 				print("processing the css...")
 				updated_content = translate_for_css(content)
-			with open(filename, mode="w") as f:
+			with open(filename, mode="w", encoding="utf-8") as f:
 				f.write(updated_content)
