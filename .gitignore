@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 *.pyc
 *.pyc
+*.pyc
+/src/pyport/__pycache__

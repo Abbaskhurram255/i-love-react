@@ -92,6 +92,6 @@ if !errorlevel! neq 0 (
 echo Starting development server...
 
 start "" "http://localhost:5173/"
-call npm run dev
+start npm run dev
 
 endlocal

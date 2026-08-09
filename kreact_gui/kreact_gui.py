@@ -6,6 +6,9 @@ from typing import Final
 
 """
 
+kreact_gui_8_beta
+
+
 *the export needs*:
 
 Script:
@@ -32,12 +35,21 @@ Batch dependencies (the most crucial):
 
 
 TITLE: Final[str] = "KReact"
-CWD: Final[str] = os.path.normpath(os.path.abspath("."))
+CWD: Final[str] = os.path.normpath(
+	os.path.abspath(".")
+)
+
+sg.theme("DarkBlue7")
 
 try:
 	import ctypes
 	app_id = f"com.klang.{TITLE}"
-	ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(app_id)
+	ctypes\
+		.windll\
+		.shell32\
+		.SetCurrentProcessExplicitAppUserModelID(
+			app_id
+		)
 except Exception:
 	...
 
@@ -45,10 +57,20 @@ except Exception:
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
 	FROZEN_ROOT: str = sys._MEIPASS
 else:
-	FROZEN_ROOT: str = os.path.dirname(os.path.abspath(__file__))
+	FROZEN_ROOT: str = os.path.dirname(
+		os.path.abspath(
+			__file__
+		)
+	)
 def to_asset(asset_path: str) -> str:
-	if not isinstance(asset_path, str): return ""
-	return os.path.normpath(os.path.join(FROZEN_ROOT, asset_path))
+	if not isinstance(asset_path, str):
+		return ""
+	return os.path.normpath(
+		os.path.join(
+			FROZEN_ROOT,
+			asset_path
+		)
+	)
 # > icon
 FAVICON: Final[str] = to_asset("react.ico")
 # > batches
@@ -57,7 +79,6 @@ NODE_BATCH_FILENAME: Final[str] = to_asset("node.bat")
 # > directories
 SOURCE_DIR: Final[str] = to_asset("kreact_source/")
 
-sg.theme("DarkTeal4")
 
 menu_items: list[list[str | list[str]]] = [
 	["&File", ["E&xit"]],
@@ -67,9 +88,9 @@ menu_items: list[list[str | list[str]]] = [
 
 lay: list[list] = [
 	[sg.Menu(menu_items)],
-	[sg.Text("Please enter the title:")],
-	[sg.Push(), sg.Input(key="project-name", tooltip="The name of your project", background_color="#ccc", enable_events=True), sg.Push()],
-	[sg.Text(CWD, key="--destination-label--", s=(24, 0), p=(15, (20, 10))), sg.FolderBrowse("Choose", key="project-destination", initial_folder=CWD, tooltip="The path where your project will live", button_color="#bbb on indigo")],
+	[sg.Text("Please enter the title:", p=(15, (15, 10)))],
+	[sg.Push(), sg.Input(key="project-name", tooltip="The name of your project...", text_color="black", background_color="#ccc", p=(15, (10, 20)), enable_events=True), sg.Push()],
+	[sg.Text(CWD, key="--destination-label--", tooltip="the path where your project will live...", s=(30, 0), p=(15, (20, 0))), sg.FolderBrowse("Choose", key="project-destination", initial_folder=CWD, tooltip="Choose the path where your project will live", button_color="black on plum")],
 	[sg.Push(), sg.Button("Build", key="build-btn", tooltip="Click to build Kreact project here", button_color="white on purple", mouseover_colors="white on #404", s=(9, 2), p=(0, (50, 30)), border_width=4), sg.Push()],
 	[sg.Push(), sg.Text("", key="build-status", s=(20, 0), p=(0, (25, 45)), text_color="#bbb", justification="c"), sg.Push()],
 	[sg.HSep(color="#000")],

@@ -1,0 +1,27 @@
+"""
+
+kreact_gui_8_beta
+
+
+*the export needs*:
+
+Script:
+	./_execute/kreact_gui/kreact_gui.py
+	... {there's more}
+.py dependencies:
+	{{none}}
+	...
+Image dependencies:
+	{as icon} ./_execute/kreact_gui/react.ico
+	{as asset} ./_execute/kreact_gui/react.ico
+	...
+Directories:
+	./_execute/kreact_gui/kreact_source
+	in /kreact_source
+	... {there's more}
+Batch dependencies (the most crucial):
+	./_execute/kreact_gui/react.bat
+	./_execute/kreact_gui/node.bat
+	
+
+"""

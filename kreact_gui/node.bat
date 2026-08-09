@@ -78,14 +78,10 @@ if !errorlevel! neq 0 (
 )
 
 echo Starting development server...
-if exist "run.bat" (
-    call run.bat
-) else (
-    if exist "kreact.exe" (
-        call kreact.exe
-    )
-    call npx nodemon "%INDEX_JS%"
-    start "" "http://localhost:3001/" & echo Listening on port 3001...
+if exist "kreact.exe" (
+    call kreact.exe
 )
+start "" "http://localhost:3001/"
+start npx nodemon "%INDEX_JS%"
 
 endlocal

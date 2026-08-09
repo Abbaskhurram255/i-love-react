@@ -64,6 +64,8 @@ def translate_for_css(code: str) -> str:
 		r"pos": "position",
 		r"rel": "relative",
 		r"abs": "absolute",
+		r"wd[ht]": "width",
+		r"hg[ht]": "height",
 		r"(?<!\-|(?<=\-) )place(?! *\-)": "inset",
 		# preserve the order
 		r"upar(?:[_\- ](?:ka|se))?[_\- ]anda?r(?:[_\- ]ka|uni)?[_\- ]fa{1,2}sla": "padding-top",
@@ -94,6 +96,7 @@ def translate_for_css(code: str) -> str:
 	}
 	code = replace(code, r"[\"'@]{3}([\s\S]*?)[\"'@]{3}", r"/*$1*/")
 	code = replace(code, r"(?<![^\n])\:\:([^\n]+)$", r"//$1")
+	code = replace(code, r"\b(?:tba|ba{1,2}d[_\- ]?me)\b", "unset")
 	strings: list[str] = find_matches(code, r"(?<![\"\\])(?:\"{3}|\"{1})[^\"]*(?:\"{1}|\"{3})(?!\")") + find_matches(code, r"(?<![\'\\])(?:\'{1}|\'{3})[^\'\"]*(?:\'{1}|\'{3})(?!\')") + find_matches(code, r"/\*[\s\S]*?\*/")
 	for i, string in enumerate(strings):
 		code = code.replace(string, f"__STRING_{i}__", 1)
@@ -168,8 +171,13 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 		r"(?:im|ta?sw(?:i|ee)?r)": "img",
 		r"(?:loc|zaria)(?= *\=)": "src",
 		r"(?:alt[_\-]?[Tt]ext|agar[_\-]?[Nn]a[_\-]?[Mm]ojud)(?= *\=)": "alt",
+		r"wd[ht](?= *\=)": "width",
+		r"hg[ht](?= *\=)": "height",
 		r"(?:sty|css|anda{1,2}z)(?= *\=)": "style",
 		r"lnk": "a",
+		r"p(?:eda|roduce) kare": "export default",
+		# keep the sequence as-is
+		r"p(?:eda|roduce)\b(?! +kare\b)": "export",
 		r"f[cn]": "function",
 		r"n(?:a(?:ya|i))": "new",
 		r"hamesha|musalsal": "const",
@@ -485,22 +493,31 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 	code = replace(code, "\t", FOUR_WHITES)
 	code = replace(code, r"(?<=[A-Za-z_\)\]\}]) +k[aeio] +(?!(?:and|aur|ya|or|(?:chot|bar)[aie]|kism)\b)(?=[A-Za-z_])", ".")
 	# the sequence is a must
-	code = replace(code, r" (?:(?<=[\w\"\'] )se(?=(?: tabtak)? ?\:)|to|tak|k[ie](?:[_ ]?lie)?|\bse(?: joke(?: (?:khud|(?:it)?self))?)?|tabtak(?= ?\:)|hua|joke(?: (?:khud|(?:it)?self))?|k[aio](?:[_ ]?lie)?(?! *[A-Za-z_]))\b", "")
+	code = replace(code, r" (?:(?<=[\w\"\'] )se(?=(?: tabtak)? ?\:)|tak|k[ie](?:[_ ]?lie)?|\bse(?: joke(?: (?:khud|(?:it)?self))?)?|tabtak(?= ?\:)|hua|joke(?: (?:khud|(?:it)?self))?|k[aio](?:[_ ]?lie)?(?! *[A-Za-z_]))\b", "")
 	code = replace(code, r"(?<= {4})(\.+|ba{1,2}d_?me|later|pass)(?![^\n])", "throw new Error('Function not implemented.')")
 	code = replace(code, r"\:(?= *\n)", " {")
 	code = replace(code, r"(?<!\S)\:?\/$", "}")
-	code = replace(code, r"<\.(?! *\d)", "<div") #start of div
-	code = replace(code, r"\.(?= *>(?! *\d))", "div") #end of div, functional
-	code = replace(code, r"< *btn\b", "<button") #start of button
-	code = replace(code, r"btn(?= *>(?! *\d))", "button") #end of button, functional
-	code = replace(code, r"< *sect\b", "<section") #start of section
-	code = replace(code, r"sect(?= *>(?! *\d))", "section") #end of section, functional
-	code = replace(code, r"(?<=\ba|(?<=\bln)k) *(?:goto|jao|kholo)\b *(?=\=)", " href")
+	code = replace(code, r"<\.(?! *[\-\.\d])", "<div") #start of div
+	code = replace(code, r"\.(?=\s*>(?! *[\-\.\d]))", "div") #end of div, functional
+	code = replace(code, r"<\s*btn\b", "<button") #start of button
+	code = replace(code, r"\bbtn(?=\s*>(?! *[\-\.\d]))", "button") #end of button, functional
+	code = replace(code, r"<\s*sect\b", "<section") #start of section
+	code = replace(code, r"\bsect(?=\s*>(?! *[\-\.\d]))", "section") #end of section, functional
+	code = replace(code, r"(?<=\ba|(?<=\bln)k)\s*\b(?:goto|jao|kholo)\b\s*(?=\s*\=)", " href")
+	code = replace(code, r"(?<=\bLink)\s*\b(?:goto|jao|kholo)\b\s*(?=\s*\=)", " to")
 	while re.search(r"([A-Za-z]+)_([A-Za-z])(\w*)", code):
-		code = re.sub(r"([A-Za-z]+)_([A-Za-z])(\w*)", lambda m: f"{m.group(1)}{m.group(2).upper()}{m.group(3).lower()}", code)
+		code = re.sub(
+			r"([A-Za-z]+)_([A-Za-z])(\w*)",
+			lambda m: f"{m.group(1)}{m.group(2).upper()}{m.group(3).lower()}",
+			code
+		)
 	# ^ was too needy for this
 	# snake case to camelCase
-	code = replace(code, r"(?<=(?<= {3}) |\t)\.{4,}(?![^\n])", "throw new Error('Function not implemented.')")
+	code = replace(
+		code,
+		r"(?<=(?<= {3}) |\t)\.{4,}(?![^\n])",
+		"throw new Error('Function not implemented.')"
+	)
 	# unlike Python, every ...{4,} should translate to ... as well, to allow forgiveness
 	# so long as it's preceded by either a tab, or 4 spaces, AND ALSO followed by a
 	# NON line-break character, to allow ranges to pass through, the following are the exceptions:
@@ -744,7 +761,6 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 	# come in the end, FOLLOW THE SEQUENCE
 	code = replace(code, r"\bkism\b", "typeof")
 	code = replace(code, r"(?<=\w )\b(?:present|mojud) (?=\S)", "")
-	code = replace(code, r" (?:(?<=[\w\"\'] )se(?=(?: tabtak)? ?\:)|to|tak|tabtak(?= ?\:)|hua|k[aeio](?:[_ ]?lie)?)\b", "")
 	code = replace(code, r"(?<![\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-|(?<=[\.\#\[\$]|(?<=\-)\-) ) )\b(?:collect(?:ed)?|together|ikhat{1,2}e)\((?<params>(?<firstparam>[^\(\)]+), *(?<restofparams>[^\(\)]+))\)", "collect($params)" if "collect" in {**globals(), **locals()} and callable({**globals(), **locals()}["collect"]) else "list(zip($params))")
 	# sequence matters
 	# core
@@ -817,8 +833,8 @@ def translate_for_react(code: str, mode: str = "react") -> str:
 	code = replace(code, r"(?<=(?:\bfrom|(?<=\bim)port) )`(?<module>[A-Za-z\.][\w\.\\\/-]*)`(?!\w)", "\'$module\'")
 	if not re.search(r"(?<=(?:\bfrom|(?<=\bim)port) )[\"\'\`]react[\"\'\`](?!\w)", code) and not code.strip().startswith("import * as React") and mode != "node":
 		code = """import * as React from "react";
-Object.assign(window, React);
-""" + """import {BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
+import {BrowserRouter as Router, Routes, Route, Link} from "react-router-dom";
+""" + """Object.assign(window, React);
 
 """ + code
 	return code
@@ -1052,7 +1068,7 @@ farz x = 10
 	print(translate_for_css("""
 x, y, aur
 z ka:
-	color: ...
+	color: baadme
 	upar-se-beruni-fasla: 2.1rm
 	upar-se-fasla: 2.1rm
 	upar_se_andruni_fasla: 2.1rm
@@ -1068,11 +1084,11 @@ body me p:
 /
 """))
 	print(
-		translate_for_css(
+		translate_for_react(
 			"""
 style={{
-	color: red
-	bg: ...
+	color: 'red',
+	bg: 'unset'
 }}
 			"""
 		)
@@ -1081,8 +1097,12 @@ style={{
 		translate_for_react(
 			"""
 			<. id="div1" sty={{
-				dis: 'flex', clr: 'gray', ai: 'center', test-in-g: 'somevalue'
+				dis: 'flex', clr: 'gray', ai: 'center', bg_color: 'somevalue',
+				wdh: 'tba',
+				hgh: 'tba'
 				}}
+				wdh=""
+				hgh=""
 			>
 				
 			</.>
@@ -1092,9 +1112,11 @@ style={{
 				ai: 'center',
 				test-in-g: 'somevalue'
 			}}>
-				<a goto=".">
+				<a kholo="path/to/image.png">
 					<tasweer
 						zaria="assets/images/girl-surprised.png"
+						wdh=""
+						hgt=""
 						agar_na_mojud="Image could not be found"
 					/>
 				</a>
@@ -1102,6 +1124,51 @@ style={{
 			"""
 		)
 	)
+	print(
+		translate_for_react(
+			"""
+			farz Navbar = () ->:
+				lotao (
+					<>
+						<nav>
+							<ul cls="flex justify-end list-none">
+								<li>
+									<Link kholo="/">
+										Home
+									</Link>
+								</li>
+								<li>
+									<Link kholo="/products">
+										Products
+									</Link>
+								</li>
+								<li>
+									<Link kholo="/services">
+										Services
+									</Link>
+								</li>
+								<li>
+									<Link kholo="/contact-us">
+										Contact Us
+									</Link>
+								</li>
+								<li>
+									<Link kholo="/about-us">
+										About Us
+									</Link>
+								</li>
+							</ul>
+						</nav>
+					</>
+				)
+			/
+			
+			peda kare Navbar
+			style={{color: 2-3}}
+			"""
+		)
+	)
+	print(translate_for_react("2-3"))
 
 if __name__ == "__main__":
 	main()
